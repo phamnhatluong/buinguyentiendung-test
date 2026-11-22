@@ -84,12 +84,262 @@
                 background: #ffffff;
             }
         }
+
+        /* === ANTI-CHEAT & ANTI-EXTERNAL-PHOTO PROTECTION === */
+        body.ac-protected {
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important;
+            touch-action: manipulation;
+        }
+        body.ac-protected input, body.ac-protected textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        body.ac-blurred > *:not(#ac-warning-modal):not(#ac-watermark):not(#ac-camera-pip):not(#toastContainer) {
+            filter: blur(22px) !important;
+            opacity: 0.12 !important;
+            pointer-events: none !important;
+            transition: filter 0.12s ease, opacity 0.12s ease;
+        }
+        #ac-watermark {
+            position: fixed;
+            inset: 0;
+            z-index: 99990;
+            pointer-events: none;
+            overflow: hidden;
+            display: none;
+        }
+        #ac-watermark-grid {
+            position: absolute;
+            inset: -60%;
+            width: 220%;
+            height: 220%;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 54px 28px;
+            transform: rotate(-28deg);
+            transition: transform 0.7s ease-in-out;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: rgba(220, 38, 38, 0.17);
+            text-align: center;
+            align-items: center;
+            user-select: none;
+        }
+        #ac-anti-photo-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: 99989;
+            pointer-events: none;
+            display: none;
+            background-image:
+                repeating-linear-gradient(
+                    45deg,
+                    rgba(15, 23, 42, 0.025) 0px,
+                    rgba(15, 23, 42, 0.025) 1px,
+                    transparent 1px,
+                    transparent 6px
+                ),
+                repeating-linear-gradient(
+                    -45deg,
+                    rgba(79, 70, 229, 0.022) 0px,
+                    rgba(79, 70, 229, 0.022) 1px,
+                    transparent 1px,
+                    transparent 6px
+                );
+        }
+        #ac-camera-pip {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            z-index: 99992;
+            width: 118px;
+            height: 88px;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 2px solid #ef4444;
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+            display: none;
+        }
+        #ac-camera-pip video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        #ac-camera-badge {
+            position: absolute;
+            top: 5px;
+            left: 6px;
+            background: rgba(220, 38, 38, 0.9);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.05em;
+        }
+        @keyframes recBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+        .ac-rec-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #fff;
+            animation: recBlink 1s infinite;
+        }
+        @media print {
+            body.ac-protected * {
+                display: none !important;
+                visibility: hidden !important;
+            }
+            body.ac-protected::after {
+                content: "NỘI DUNG ĐỀ THI ĐƯỢC BẢO VỆ CHỐNG IN & SAO CHÉP (EDUMETRICS VN)";
+                display: block !important;
+                visibility: visible !important;
+                font-size: 20px;
+                font-weight: 800;
+                color: #dc2626;
+                text-align: center;
+                padding: 80px 20px;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-indigo-600 selection:text-white overflow-x-hidden">
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+
+    <!-- Anti-Photo Mesh & Dynamic Forensic Watermark -->
+    <div id="ac-anti-photo-mesh" class="no-print"></div>
+    <div id="ac-watermark" class="no-print"><div id="ac-watermark-grid"></div></div>
+
+    <!-- Camera Proctoring PiP -->
+    <div id="ac-camera-pip" class="no-print">
+        <video id="ac-camera-video" autoplay muted playsinline></video>
+        <canvas id="ac-camera-canvas" width="64" height="48" class="hidden"></canvas>
+        <div id="ac-camera-badge"><span class="ac-rec-dot"></span><span>GIÁM SÁT</span></div>
+    </div>
+
+    <!-- Safe Exam Setup Modal -->
+    <div id="ac-setup-modal" class="fixed inset-0 z-[99995] hidden items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Bật Chế Độ Thi An Toàn (Chống Gian Lận)</h3>
+                        <p class="text-xs text-slate-500">Bảo vệ đề thi & truy vết chống chụp ảnh từ máy khác</p>
+                    </div>
+                </div>
+                <button onclick="AntiCheatEngine.closeSetupModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+                    <input id="acOptLockTab" type="checkbox" checked class="mt-0.5 accent-rose-600 rounded" />
+                    <div>
+                        <p class="font-bold text-slate-800">Ép Toàn màn hình, Khóa chuyển Tab/App & Chia đôi màn hình</p>
+                        <p class="text-slate-500 mt-0.5">Phát hiện rời ứng dụng, kéo thanh thông báo, mở cửa sổ nổi, chặn copy & phím chụp màn hình. Vi phạm tối đa <strong class="text-rose-600">3 lần</strong> sẽ tự động nộp bài.</p>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-rose-50/60 border border-rose-200 cursor-pointer">
+                    <input id="acOptWatermark" type="checkbox" checked class="mt-0.5 accent-rose-600 rounded" />
+                    <div>
+                        <p class="font-bold text-rose-900">Chống chụp từ máy khác: Watermark động + Lưới vân + Làm mờ tức thì</p>
+                        <p class="text-slate-600 mt-0.5">Phủ kín màn hình bằng <strong>Họ tên + Lớp + Mã phiên + Giờ:Phút:Giây thực</strong> tự động dịch chuyển mỗi 3 giây. Dù chụp bằng điện thoại khác vẫn dính rõ danh tính thí sinh.</p>
+                    </div>
+                </label>
+
+                <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input id="acOptPerQuestion" type="checkbox" onchange="document.getElementById('acPerQSecondsWrap').classList.toggle('hidden', !this.checked)" class="mt-0.5 accent-amber-600 rounded" />
+                        <div>
+                            <p class="font-bold text-amber-900">Chế độ Chống Chụp Nhanh (Đếm ngược từng câu & Khóa quay lại)</p>
+                            <p class="text-slate-600 mt-0.5">Giới hạn thời gian ngắn cho mỗi câu và không cho quay lại câu cũ — khiến thí sinh không kịp dùng máy thứ 2 chụp gửi đi nhờ giải.</p>
+                        </div>
+                    </label>
+                    <div id="acPerQSecondsWrap" class="hidden pl-7 flex items-center gap-2">
+                        <span class="font-semibold text-slate-700">Thời gian mỗi câu:</span>
+                        <select id="acOptPerQSeconds" class="px-2.5 py-1 rounded-lg border border-amber-300 bg-white font-bold text-slate-800">
+                            <option value="20">20 giây / câu (Siêu gắt)</option>
+                            <option value="30" selected>30 giây / câu (Khuyên dùng)</option>
+                            <option value="45">45 giây / câu</option>
+                            <option value="60">60 giây / câu</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-200 cursor-pointer">
+                    <input id="acOptCamera" type="checkbox" class="mt-0.5 accent-indigo-600 rounded" />
+                    <div>
+                        <p class="font-bold text-indigo-900">Giám sát Camera trước (Phát hiện che camera)</p>
+                        <p class="text-slate-600 mt-0.5">Hiển thị khung camera giám sát nhỏ ở góc màn hình. Nếu thí sinh che tối camera sẽ tự động ghi nhận vi phạm.</p>
+                    </div>
+                </label>
+
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Giới hạn số lần vi phạm</label>
+                        <select id="acOptMaxViolations" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-800">
+                            <option value="2">2 lần (Nghiêm ngặt)</option>
+                            <option value="3" selected>3 lần (Tiêu chuẩn)</option>
+                            <option value="5">5 lần (Cơ bản)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Xáo trộn đề & đáp án</label>
+                        <select id="acOptShuffle" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-800">
+                            <option value="yes" selected>Có (Trộn câu hỏi)</option>
+                            <option value="no">Giữ nguyên thứ tự</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 mt-5 pt-4 border-t border-slate-100">
+                <button onclick="AntiCheatEngine.closeSetupModal()" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Hủy</button>
+                <button onclick="AntiCheatEngine.confirmStartFromModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Kích hoạt & Bắt đầu Thi An Toàn</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anti-Cheat Violation Warning Modal -->
+    <div id="ac-warning-modal" class="fixed inset-0 z-[99999] hidden items-center justify-center bg-slate-950/92 backdrop-blur-md p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border-2 border-rose-500 text-center space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mx-auto">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="text-lg font-extrabold text-rose-600">CẢNH BÁO VI PHẠM QUY CHẾ THI</h3>
+                <p id="ac-warning-msg" class="text-sm text-slate-700 mt-2 leading-relaxed"></p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 text-xs text-slate-500">
+                Mọi hành vi vi phạm đều được ghi nhận thời điểm chính xác và hiển thị trong <strong>Báo cáo Năng lực</strong> sau khi nộp bài.
+            </div>
+            <button id="ac-resume-btn" onclick="AntiCheatEngine.resumeAfterWarning()" class="w-full py-3 rounded-xl text-sm font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-md transition">
+                <i class="fa-solid fa-expand mr-1.5"></i>Quay lại chế độ toàn màn hình
+            </button>
+        </div>
+    </div>
 
     <!-- Custom Confirmation Modal -->
     <div id="confirmModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
@@ -304,13 +554,18 @@
                                 <span class="text-[9px] uppercase tracking-wider text-slate-400 block leading-none">Thời gian</span>
                                 <span id="timerDisplay" class="font-mono font-bold text-sm sm:text-base tracking-wider">25:00</span>
                             </div>
-                            <button onclick="toggleTimerPause()" title="Tạm dừng / Tiếp tục" class="ml-1 w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-xs text-slate-200 transition">
+                            <button id="pauseTimerBtn" onclick="toggleTimerPause()" title="Tạm dừng / Tiếp tục" class="ml-1 w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-xs text-slate-200 transition">
                                 <i class="fa-solid fa-pause" id="pauseTimerIcon"></i>
                             </button>
                         </div>
 
-                        <div class="flex items-center gap-2">
-                            <button onclick="autoFillDemoAnswers()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition flex items-center gap-1.5">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button id="acToggleSafeModeBtn" onclick="AntiCheatEngine.openSetupModal()" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <span id="acToggleSafeModeText">Bật Chống Gian Lận</span>
+                            </button>
+
+                            <button id="autoFillDemoBtn" onclick="autoFillDemoAnswers()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition flex items-center gap-1.5">
                                 <i class="fa-solid fa-wand-magic-sparkles"></i>
                                 <span>Làm thử nhanh</span>
                             </button>
@@ -321,6 +576,24 @@
                             </button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Live Anti-Cheat Active Status Strip -->
+                <div id="acStatusStrip" class="hidden pt-3 border-t border-rose-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold">
+                            <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                            <span>CHẾ ĐỘ THI AN TOÀN ĐANG BẬT</span>
+                        </span>
+                        <span id="acSessionIdBadge" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold">Mã phiên: #---</span>
+                        <span id="acViolationCounterBadge" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">Vi phạm: 0/3</span>
+                        <span id="acPerQCountdownBadge" class="hidden px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300 font-mono font-bold">
+                            <i class="fa-solid fa-hourglass-half mr-1"></i>Còn: <span id="acPerQSecDisplay">30</span>s
+                        </span>
+                    </div>
+                    <span class="text-[11px] text-rose-600 font-semibold">
+                        <i class="fa-solid fa-fingerprint mr-1"></i>Watermark chống chụp & khóa chuyển tab đang hoạt động
+                    </span>
                 </div>
             </div>
 
@@ -381,7 +654,7 @@
                                 <span>Câu trước</span>
                             </button>
 
-                            <button onclick="toggleInstantExplanation()" class="px-3.5 py-2 rounded-xl text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition flex items-center gap-1.5">
+                            <button id="toggleExplainBtn" onclick="toggleInstantExplanation()" class="px-3.5 py-2 rounded-xl text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition flex items-center gap-1.5">
                                 <i class="fa-regular fa-eye"></i>
                                 <span id="toggleExplainText">Xem gợi ý / Đáp án</span>
                             </button>
@@ -416,7 +689,7 @@
 
                         <div id="questionPaletteGrid" class="grid grid-cols-4 sm:grid-cols-8 lg:grid-cols-4 gap-2 mb-5"></div>
 
-                        <button onclick="resetExamAttempt()" class="w-full py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition flex items-center justify-center gap-1.5">
+                        <button id="resetExamBtn" onclick="resetExamAttempt()" class="w-full py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-rotate-left"></i>
                             <span>Làm lại từ đầu</span>
                         </button>
@@ -989,6 +1262,26 @@
                         <i class="fa-solid fa-brain"></i>
                     </div>
                 </div>
+            </div>
+
+            <!-- Anti-Cheat Proctoring & Integrity Report Card -->
+            <div id="acReportIntegrityCard" class="hidden bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/80">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3.5 mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <div id="acReportIconBox" class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shrink-0">
+                            <i class="fa-solid fa-shield-check"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Báo Cáo Giám Sát & Chống Gian Lận</h2>
+                            <p id="acReportSubtitle" class="text-xs text-slate-500">Xác thực tính trung thực của phiên làm bài</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 text-xs">
+                        <span id="acReportSessionPill" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold">Mã phiên: #---</span>
+                        <span id="acReportStatusPill" class="px-3 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800">Trung thực tuyệt đối</span>
+                    </div>
+                </div>
+                <div id="acReportLogContainer" class="space-y-2 text-xs"></div>
             </div>
 
             <!-- Visual Analytics Row -->
@@ -1566,6 +1859,10 @@
         // 8. TAB NAVIGATION & STUDENT PROFILE
         // ---------------------------------------------------------
         function switchTab(tabId) {
+            if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive() && tabId !== 'exam') {
+                showToast('Đang bật Chế độ Thi An Toàn! Vui lòng nộp bài trước khi rời phòng thi.', 'warning');
+                return;
+            }
             appState.activeTab = tabId;
             ['exam', 'manage', 'report'].forEach(id => {
                 const sec = document.getElementById(`view-${id}`);
@@ -1852,6 +2149,11 @@
                 nextBtn.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 transition flex items-center gap-2';
             }
 
+            if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive()) {
+                if (AntiCheatEngine.isBackwardLocked()) {
+                    document.getElementById('prevQBtn').disabled = true;
+                }
+            }
             renderQuestionPalette(answeredCount);
             renderExamMatrixMiniSummary();
         }
@@ -1862,18 +2164,38 @@
         }
 
         function navigateQuestion(delta) {
+            if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive() && AntiCheatEngine.isBackwardLocked() && delta < 0) {
+                showToast('Chế độ Chống Chụp Nhanh không cho phép quay lại câu trước.', 'warning');
+                return;
+            }
             const next = appState.currentQIndex + delta;
             if (next >= 0 && next < appState.questions.length) {
                 appState.currentQIndex = next;
                 appState.showInstantExplain = false;
                 renderExamView();
+                if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive()) {
+                    AntiCheatEngine.resetPerQuestionTimer();
+                }
             }
         }
 
         function jumpToQuestion(idx) {
+            if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive() && AntiCheatEngine.isBackwardLocked()) {
+                if (idx < appState.currentQIndex) {
+                    showToast('Chế độ Chống Chụp Nhanh không cho phép quay lại câu trước.', 'warning');
+                    return;
+                }
+                if (idx > appState.currentQIndex + 1) {
+                    showToast('Hãy hoàn thành lần lượt từng câu trong Chế độ Chống Chụp Nhanh.', 'warning');
+                    return;
+                }
+            }
             appState.currentQIndex = idx;
             appState.showInstantExplain = false;
             renderExamView();
+            if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive()) {
+                AntiCheatEngine.resetPerQuestionTimer();
+            }
         }
 
         function toggleFlagCurrentQuestion() {
@@ -2777,6 +3099,10 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
             const mins = Math.floor(elapsedSec / 60);
             const secs = elapsedSec % 60;
 
+            const antiCheatSnapshot = (typeof AntiCheatEngine !== 'undefined')
+                ? AntiCheatEngine.finishAndGetReport()
+                : null;
+
             appState.reportData = {
                 source: 'exam',
                 subjectId: appState.activeSubjectId,
@@ -2787,7 +3113,8 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 overallScore,
                 skillPcts,
                 cogPcts,
-                crossMatrix
+                crossMatrix,
+                antiCheat: antiCheatSnapshot
             };
 
             if (navigateToReport) {
@@ -2849,6 +3176,9 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
             renderDiagnosticInsights(data, sub, topKey, weakKey, highOrderPct);
             renderLearningRoadmap(data, sub, weakKey, highOrderPct);
             renderDetailedQuestionReview();
+            if (typeof AntiCheatEngine !== 'undefined') {
+                AntiCheatEngine.renderIntegrityReport(data.antiCheat);
+            }
         }
 
         function renderSkillRadarChart(skillPcts, sub) {
@@ -3130,8 +3460,11 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 `• ${sub.skills.s3.name}: ${d.skillPcts.s3}%`,
                 `• ${sub.skills.s4.name}: ${d.skillPcts.s4}%`,
                 `--- 4 Mức độ Nhận thức ---`,
-                `• Nhận biết: ${d.cogPcts.nb}% | Thông hiểu: ${d.cogPcts.th}% | Vận dụng: ${d.cogPcts.vd}% | Vận dụng cao: ${d.cogPcts.vdc}%`
-            ].join('\n');
+                `• Nhận biết: ${d.cogPcts.nb}% | Thông hiểu: ${d.cogPcts.th}% | Vận dụng: ${d.cogPcts.vd}% | Vận dụng cao: ${d.cogPcts.vdc}%`,
+                d.antiCheat && d.antiCheat.enabled
+                    ? `--- Giám sát Chống Gian Lận (Mã phiên: #${d.antiCheat.sessionId}) ---\n• Số lần vi phạm: ${d.antiCheat.violations}/${d.antiCheat.maxViolations} (${d.antiCheat.forcedSubmit ? 'Tự động khóa & nộp bài' : (d.antiCheat.violations === 0 ? 'Trung thực tuyệt đối' : 'Có cảnh báo')})`
+                    : ''
+            ].filter(Boolean).join('\n');
 
             const ta = document.createElement('textarea');
             ta.value = text;
@@ -3186,6 +3519,470 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 setTimeout(() => toast.remove(), 300);
             }, 3400);
         }
+
+        // ---------------------------------------------------------
+        // 16. ANTI-CHEAT & ANTI-EXTERNAL-PHOTO ENGINE (PROCTORING)
+        // ---------------------------------------------------------
+        const AntiCheatEngine = (() => {
+            let active = false;
+            let wasEnabledInSession = false;
+            let sessionId = '';
+            let violations = 0;
+            let maxViolations = 3;
+            let violationLogs = [];
+            let forcedSubmit = false;
+            let config = {
+                lockTab: true,
+                watermark: true,
+                perQuestion: false,
+                perQuestionSec: 30,
+                camera: false
+            };
+
+            let wmTimer = null;
+            let perQTimer = null;
+            let perQRemaining = 30;
+            let cameraStream = null;
+            let cameraCheckTimer = null;
+            let darkFramesCount = 0;
+            let lastViolationAt = 0;
+            let baselineWidth = window.innerWidth;
+            let baselineHeight = window.innerHeight;
+
+            function genSessionId() {
+                return 'EM' + Math.random().toString(36).substring(2, 7).toUpperCase();
+            }
+
+            function openSetupModal() {
+                if (active) {
+                    showToast('Chế độ Thi An Toàn đang bật. Hãy nộp bài khi hoàn thành!', 'info');
+                    return;
+                }
+                const m = document.getElementById('ac-setup-modal');
+                m.classList.remove('hidden');
+                m.classList.add('flex');
+            }
+
+            function closeSetupModal() {
+                const m = document.getElementById('ac-setup-modal');
+                m.classList.add('hidden');
+                m.classList.remove('flex');
+            }
+
+            async function confirmStartFromModal() {
+                config.lockTab = document.getElementById('acOptLockTab').checked;
+                config.watermark = document.getElementById('acOptWatermark').checked;
+                config.perQuestion = document.getElementById('acOptPerQuestion').checked;
+                config.perQuestionSec = parseInt(document.getElementById('acOptPerQSeconds').value, 10) || 30;
+                config.camera = document.getElementById('acOptCamera').checked;
+                maxViolations = parseInt(document.getElementById('acOptMaxViolations').value, 10) || 3;
+                const doShuffle = document.getElementById('acOptShuffle').value === 'yes';
+
+                closeSetupModal();
+                syncStudentProfile();
+
+                if (config.camera) {
+                    const camOk = await startCameraProctoring();
+                    if (!camOk) {
+                        showToast('Không thể mở Camera trước (do chưa cấp quyền hoặc không hỗ trợ). Tiếp tục với các lớp bảo vệ còn lại.', 'warning');
+                        config.camera = false;
+                    }
+                }
+
+                // Reset exam for a clean proctored attempt
+                if (doShuffle && appState.questions.length > 1) {
+                    appState.questions = shuffleArray(appState.questions);
+                }
+                appState.userAnswers = {};
+                appState.flaggedQuestions = {};
+                appState.currentQIndex = 0;
+                appState.showInstantExplain = false;
+                appState.timerSeconds = appState.totalExamSeconds;
+                appState.timerPaused = false;
+
+                activateProtection();
+                updateTimerUI();
+                renderExamView();
+                showToast(`Đã kích hoạt Chế độ Thi An Toàn (Mã phiên #${sessionId})!`, 'success');
+            }
+
+            function activateProtection() {
+                active = true;
+                wasEnabledInSession = true;
+                sessionId = genSessionId();
+                violations = 0;
+                violationLogs = [];
+                forcedSubmit = false;
+                lastViolationAt = 0;
+                baselineWidth = window.innerWidth;
+                baselineHeight = window.innerHeight;
+
+                document.body.classList.add('ac-protected');
+
+                // Hide cheat-prone controls
+                ['autoFillDemoBtn', 'toggleExplainBtn', 'resetExamBtn', 'pauseTimerBtn'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+                ['examSubjectSelect', 'examPresetSelect', 'studentNameInput', 'studentClassInput'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.disabled = true;
+                });
+
+                // Update top safe-mode button & status strip
+                const toggleBtn = document.getElementById('acToggleSafeModeBtn');
+                if (toggleBtn) {
+                    toggleBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white shadow-sm flex items-center gap-1.5 cursor-default';
+                    document.getElementById('acToggleSafeModeText').textContent = 'Đang Bảo Vệ';
+                }
+                document.getElementById('acStatusStrip').classList.remove('hidden');
+                document.getElementById('acSessionIdBadge').textContent = `Mã phiên: #${sessionId}`;
+                updateViolationBadge();
+
+                // Watermark + Anti-Photo Mesh
+                if (config.watermark) {
+                    document.getElementById('ac-watermark').style.display = 'block';
+                    document.getElementById('ac-anti-photo-mesh').style.display = 'block';
+                    renderWatermark();
+                    clearInterval(wmTimer);
+                    wmTimer = setInterval(renderWatermark, 3000);
+                }
+
+                // Per-question countdown
+                if (config.perQuestion) {
+                    document.getElementById('acPerQCountdownBadge').classList.remove('hidden');
+                    resetPerQuestionTimer();
+                } else {
+                    document.getElementById('acPerQCountdownBadge').classList.add('hidden');
+                }
+
+                // Request fullscreen
+                if (config.lockTab) {
+                    requestFullscreen();
+                }
+            }
+
+            function renderWatermark() {
+                const grid = document.getElementById('ac-watermark-grid');
+                if (!grid) return;
+                const now = new Date().toLocaleTimeString('vi-VN');
+                const label = `${escapeHtml(appState.studentName.toUpperCase())} • ${escapeHtml(appState.studentClass)} • #${sessionId} • ${now}`;
+                grid.innerHTML = Array(48).fill(`<div>${label}</div>`).join('');
+                const dx = Math.floor(Math.random() * 44 - 22);
+                const dy = Math.floor(Math.random() * 44 - 22);
+                const rot = -28 + Math.floor(Math.random() * 5 - 2);
+                grid.style.transform = `rotate(${rot}deg) translate(${dx}px, ${dy}px)`;
+            }
+
+            function resetPerQuestionTimer() {
+                clearInterval(perQTimer);
+                if (!active || !config.perQuestion) return;
+                perQRemaining = config.perQuestionSec;
+                const disp = document.getElementById('acPerQSecDisplay');
+                if (disp) disp.textContent = perQRemaining;
+
+                perQTimer = setInterval(() => {
+                    if (!active || !config.perQuestion) {
+                        clearInterval(perQTimer);
+                        return;
+                    }
+                    perQRemaining--;
+                    if (disp) disp.textContent = Math.max(0, perQRemaining);
+                    if (perQRemaining <= 0) {
+                        clearInterval(perQTimer);
+                        if (appState.currentQIndex < appState.questions.length - 1) {
+                            appState.currentQIndex++;
+                            appState.showInstantExplain = false;
+                            renderExamView();
+                            showToast('Hết thời gian câu hiện tại! Tự động chuyển sang câu tiếp theo.', 'warning');
+                            resetPerQuestionTimer();
+                        } else {
+                            showToast('Hết thời gian câu cuối! Hệ thống tự động nộp bài.', 'warning');
+                            computeReportFromExamAttempt(true);
+                        }
+                    }
+                }, 1000);
+            }
+
+            async function startCameraProctoring() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: 320, height: 240 },
+                        audio: false
+                    });
+                    const video = document.getElementById('ac-camera-video');
+                    video.srcObject = cameraStream;
+                    document.getElementById('ac-camera-pip').style.display = 'block';
+                    darkFramesCount = 0;
+
+                    clearInterval(cameraCheckTimer);
+                    cameraCheckTimer = setInterval(() => {
+                        if (!active || !cameraStream) return;
+                        const canvas = document.getElementById('ac-camera-canvas');
+                        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                        if (video.readyState >= 2) {
+                            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            const frame = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+                            let totalLum = 0;
+                            for (let i = 0; i < frame.length; i += 4) {
+                                totalLum += (0.299 * frame[i] + 0.587 * frame[i + 1] + 0.114 * frame[i + 2]);
+                            }
+                            const avgLum = totalLum / (frame.length / 4);
+                            if (avgLum < 12) {
+                                darkFramesCount++;
+                                if (darkFramesCount >= 2) {
+                                    darkFramesCount = 0;
+                                    triggerViolation('Phát hiện che khuất Camera giám sát (khung hình tối đen)');
+                                }
+                            } else {
+                                darkFramesCount = 0;
+                            }
+                        }
+                    }, 3000);
+                    return true;
+                } catch (err) {
+                    return false;
+                }
+            }
+
+            function stopCameraProctoring() {
+                clearInterval(cameraCheckTimer);
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(t => t.stop());
+                    cameraStream = null;
+                }
+                const pip = document.getElementById('ac-camera-pip');
+                if (pip) pip.style.display = 'none';
+            }
+
+            function requestFullscreen() {
+                const el = document.documentElement;
+                if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            }
+
+            function updateViolationBadge() {
+                const badge = document.getElementById('acViolationCounterBadge');
+                if (!badge) return;
+                badge.textContent = `Vi phạm: ${violations}/${maxViolations}`;
+                if (violations === 0) {
+                    badge.className = 'px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold';
+                } else {
+                    badge.className = 'px-2.5 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-300 font-bold animate-pulse';
+                }
+            }
+
+            function triggerViolation(reason) {
+                if (!active) return;
+                const nowMs = Date.now();
+                if (nowMs - lastViolationAt < 1800) return;
+                lastViolationAt = nowMs;
+
+                violations++;
+                violationLogs.push({
+                    time: new Date().toLocaleTimeString('vi-VN'),
+                    reason
+                });
+                updateViolationBadge();
+                document.body.classList.add('ac-blurred');
+
+                const modal = document.getElementById('ac-warning-modal');
+                const msgEl = document.getElementById('ac-warning-msg');
+                const resumeBtn = document.getElementById('ac-resume-btn');
+
+                if (violations >= maxViolations) {
+                    forcedSubmit = true;
+                    msgEl.innerHTML = `Phát hiện: <strong>${escapeHtml(reason)}</strong>.<br>Bạn đã chạm ngưỡng <strong>${violations}/${maxViolations} lần vi phạm</strong>.<br>Hệ thống sẽ tự động khóa đề và nộp bài ngay lập tức!`;
+                    resumeBtn.classList.add('hidden');
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                        modal.classList.remove('flex');
+                        computeReportFromExamAttempt(true);
+                    }, 2000);
+                } else {
+                    msgEl.innerHTML = `Phát hiện: <strong>${escapeHtml(reason)}</strong>.<br>Số lần vi phạm hiện tại: <strong class="text-rose-600">${violations}/${maxViolations}</strong>.<br>Nếu tiếp tục vi phạm, hệ thống sẽ tự động thu bài.`;
+                    resumeBtn.classList.remove('hidden');
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+            }
+
+            function resumeAfterWarning() {
+                const modal = document.getElementById('ac-warning-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.classList.remove('ac-blurred');
+                if (config.lockTab) requestFullscreen();
+            }
+
+            function stopProtection() {
+                active = false;
+                clearInterval(wmTimer);
+                clearInterval(perQTimer);
+                stopCameraProctoring();
+
+                document.body.classList.remove('ac-protected', 'ac-blurred');
+                document.getElementById('ac-watermark').style.display = 'none';
+                document.getElementById('ac-anti-photo-mesh').style.display = 'none';
+                document.getElementById('acStatusStrip').classList.add('hidden');
+
+                ['autoFillDemoBtn', 'toggleExplainBtn', 'resetExamBtn', 'pauseTimerBtn'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.remove('hidden');
+                });
+                ['examSubjectSelect', 'examPresetSelect', 'studentNameInput', 'studentClassInput'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.disabled = false;
+                });
+
+                const toggleBtn = document.getElementById('acToggleSafeModeBtn');
+                if (toggleBtn) {
+                    toggleBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5';
+                    document.getElementById('acToggleSafeModeText').textContent = 'Bật Chống Gian Lận';
+                }
+
+                if (document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                }
+            }
+
+            function finishAndGetReport() {
+                const report = {
+                    enabled: wasEnabledInSession,
+                    sessionId: sessionId || 'NONE',
+                    violations,
+                    maxViolations,
+                    forcedSubmit,
+                    cameraUsed: config.camera,
+                    perQuestionMode: config.perQuestion,
+                    logs: [...violationLogs]
+                };
+                stopProtection();
+                wasEnabledInSession = false;
+                return report;
+            }
+
+            function renderIntegrityReport(acData) {
+                const card = document.getElementById('acReportIntegrityCard');
+                if (!card) return;
+                if (!acData || !acData.enabled) {
+                    card.classList.add('hidden');
+                    return;
+                }
+                card.classList.remove('hidden');
+
+                const iconBox = document.getElementById('acReportIconBox');
+                const statusPill = document.getElementById('acReportStatusPill');
+                const sessionPill = document.getElementById('acReportSessionPill');
+                const subtitle = document.getElementById('acReportSubtitle');
+                const logBox = document.getElementById('acReportLogContainer');
+
+                sessionPill.textContent = `Mã phiên: #${acData.sessionId}`;
+                subtitle.textContent = `Chế độ Thi An Toàn • Watermark chống chụp${acData.perQuestionMode ? ' • Đếm ngược từng câu' : ''}${acData.cameraUsed ? ' • Giám sát Camera' : ''}`;
+
+                if (acData.forcedSubmit) {
+                    iconBox.className = 'w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg shrink-0';
+                    iconBox.innerHTML = '<i class="fa-solid fa-ban"></i>';
+                    statusPill.className = 'px-3 py-1 rounded-full font-bold bg-rose-100 text-rose-700';
+                    statusPill.textContent = `Bị khóa & tự nộp (${acData.violations}/${acData.maxViolations} vi phạm)`;
+                } else if (acData.violations > 0) {
+                    iconBox.className = 'w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0';
+                    iconBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    statusPill.className = 'px-3 py-1 rounded-full font-bold bg-amber-100 text-amber-800';
+                    statusPill.textContent = `Có cảnh báo (${acData.violations}/${acData.maxViolations} vi phạm)`;
+                } else {
+                    iconBox.className = 'w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg shrink-0';
+                    iconBox.innerHTML = '<i class="fa-solid fa-shield-halved"></i>';
+                    statusPill.className = 'px-3 py-1 rounded-full font-bold bg-emerald-100 text-emerald-800';
+                    statusPill.textContent = 'Trung thực tuyệt đối (0 vi phạm)';
+                }
+
+                if (!acData.logs.length) {
+                    logBox.innerHTML = `<div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-800 font-medium"><i class="fa-solid fa-circle-check mr-1.5"></i>Không phát hiện hành vi chuyển tab, thoát toàn màn hình, sao chép hay chụp màn hình trong suốt quá trình thi.</div>`;
+                } else {
+                    logBox.innerHTML = acData.logs.map((item, i) => `
+                        <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-rose-50/60 border border-rose-200 text-rose-900">
+                            <span><strong>#${i + 1}.</strong> ${escapeHtml(item.reason)}</span>
+                            <span class="font-mono text-[11px] font-bold text-rose-600 shrink-0">${item.time}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // === GLOBAL SECURITY LISTENERS ===
+            document.addEventListener('visibilitychange', () => {
+                if (active && config.lockTab && document.hidden) {
+                    triggerViolation('Rời khỏi màn hình làm bài / Chuyển ứng dụng khác');
+                }
+            });
+
+            window.addEventListener('blur', () => {
+                if (active && config.lockTab) {
+                    document.body.classList.add('ac-blurred');
+                    triggerViolation('Mất tiêu điểm cửa sổ (Kéo thanh thông báo / Mở cửa sổ nổi)');
+                }
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                if (active && config.lockTab && !document.fullscreenElement) {
+                    triggerViolation('Thoát khỏi chế độ toàn màn hình');
+                }
+            });
+
+            // Detect sudden split-screen / pop-up view resize on Android/Desktop
+            let resizeDebounce = null;
+            window.addEventListener('resize', () => {
+                if (!active || !config.lockTab) return;
+                clearTimeout(resizeDebounce);
+                resizeDebounce = setTimeout(() => {
+                    const widthDrop = baselineWidth - window.innerWidth;
+                    const heightDrop = baselineHeight - window.innerHeight;
+                    if (widthDrop > 160 || heightDrop > 220) {
+                        triggerViolation('Thay đổi kích thước màn hình bất thường (Chia đôi màn hình / Cửa sổ thu nhỏ)');
+                    }
+                }, 400);
+            });
+
+            ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dragstart'].forEach(evt => {
+                document.addEventListener(evt, e => {
+                    if (active) e.preventDefault();
+                });
+            });
+
+            document.addEventListener('keydown', e => {
+                if (!active) return;
+                const k = e.key.toLowerCase();
+                const isScreenshotKey = e.key === 'PrintScreen' || (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(k)) || (e.ctrlKey && e.shiftKey && k === 's');
+                const isDevOrPrint = e.key === 'F12' || (e.ctrlKey && ['c', 'v', 'x', 'u', 'p', 's', 'a'].includes(k)) || (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(k));
+                if (isScreenshotKey) {
+                    e.preventDefault();
+                    document.body.classList.add('ac-blurred');
+                    triggerViolation('Phát hiện thao tác chụp ảnh màn hình');
+                } else if (isDevOrPrint) {
+                    e.preventDefault();
+                }
+            });
+
+            window.addEventListener('beforeprint', () => {
+                if (active) triggerViolation('Cố gắng in hoặc xuất PDF đề thi');
+            });
+
+            return {
+                openSetupModal,
+                closeSetupModal,
+                confirmStartFromModal,
+                resumeAfterWarning,
+                resetPerQuestionTimer,
+                finishAndGetReport,
+                renderIntegrityReport,
+                isActive: () => active,
+                isBackwardLocked: () => active && config.perQuestion
+            };
+        })();
     </script>
 </body>
 </html>
