@@ -85,23 +85,58 @@
             }
         }
 
-        /* === ANTI-CHEAT & ANTI-EXTERNAL-PHOTO PROTECTION === */
+        /* === ANTI-CHEAT, MOBILE BLACKOUT & ANTI-EXTERNAL-PHOTO PROTECTION (V2) === */
         body.ac-protected {
             -webkit-user-select: none !important;
             user-select: none !important;
             -webkit-touch-callout: none !important;
-            touch-action: manipulation;
+            touch-action: pan-y;
         }
         body.ac-protected input, body.ac-protected textarea {
             -webkit-user-select: text;
             user-select: text;
         }
-        body.ac-blurred > *:not(#ac-warning-modal):not(#ac-watermark):not(#ac-camera-pip):not(#toastContainer) {
-            filter: blur(22px) !important;
-            opacity: 0.12 !important;
+        /* Instant 0ms blur/blackout with ZERO transition delay so screenshots cannot race it */
+        body.ac-blurred > *:not(#ac-warning-modal):not(#ac-blackout-curtain):not(#ac-watermark):not(#ac-camera-pip):not(#ac-admin-login-modal):not(#ac-setup-modal):not(#toastContainer) {
+            filter: blur(26px) !important;
+            opacity: 0.05 !important;
             pointer-events: none !important;
-            transition: filter 0.12s ease, opacity 0.12s ease;
+            transition: none !important;
         }
+        #ac-blackout-curtain {
+            position: fixed;
+            inset: 0;
+            z-index: 99997;
+            background: #020617;
+            color: #f8fafc;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+            padding: 24px;
+            transition: none !important;
+        }
+        #ac-blackout-curtain.active {
+            display: flex !important;
+        }
+        /* Anti-External-Photo Veil on Question Card */
+        .ac-question-veiled #qContextBox,
+        .ac-question-veiled #qText,
+        .ac-question-veiled #qOptionsContainer {
+            filter: blur(18px) !important;
+            opacity: 0.18 !important;
+            pointer-events: none !important;
+            transition: none !important;
+        }
+        #ac-veil-overlay {
+            display: none;
+        }
+        .ac-question-veiled #ac-veil-overlay {
+            display: flex !important;
+        }
+        /* Dense Dynamic Forensic Watermark */
         #ac-watermark {
             position: fixed;
             inset: 0;
@@ -112,23 +147,61 @@
         }
         #ac-watermark-grid {
             position: absolute;
-            inset: -60%;
-            width: 220%;
-            height: 220%;
+            inset: -65%;
+            width: 230%;
+            height: 230%;
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 54px 28px;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 28px 16px;
             transform: rotate(-28deg);
-            transition: transform 0.7s ease-in-out;
+            transition: transform 0.45s ease-in-out;
             font-family: 'Inter', sans-serif;
             font-size: 12px;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            color: rgba(220, 38, 38, 0.17);
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            color: rgba(220, 38, 38, 0.34);
+            text-shadow: 0 0 1px rgba(255, 255, 255, 0.6);
             text-align: center;
             align-items: center;
             user-select: none;
         }
+        /* Direct Question-Line Watermark Strip (Cuts straight through question text) */
+        #ac-qtext-watermark {
+            position: absolute;
+            inset: 0;
+            z-index: 15;
+            pointer-events: none;
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+        #ac-qtext-watermark span {
+            font-size: 13px;
+            font-weight: 900;
+            color: rgba(220, 38, 38, 0.28);
+            transform: rotate(-14deg);
+            white-space: nowrap;
+            letter-spacing: 0.06em;
+        }
+        /* Hold-to-View Strict Mode: Completely black/blurred unless actively holding */
+        .ac-hold-locked #qContextBox,
+        .ac-hold-locked #qText,
+        .ac-hold-locked #qOptionsContainer {
+            filter: blur(28px) !important;
+            opacity: 0.02 !important;
+            pointer-events: none !important;
+            transition: none !important;
+        }
+        #ac-hold-bar {
+            display: none;
+        }
+        .ac-hold-active #ac-hold-bar {
+            display: flex !important;
+        }
+        /* Moire Anti-Camera Interference Mesh (Phone & PC external camera deterrence) */
         #ac-anti-photo-mesh {
             position: fixed;
             inset: 0;
@@ -138,17 +211,24 @@
             background-image:
                 repeating-linear-gradient(
                     45deg,
-                    rgba(15, 23, 42, 0.025) 0px,
-                    rgba(15, 23, 42, 0.025) 1px,
+                    rgba(15, 23, 42, 0.032) 0px,
+                    rgba(15, 23, 42, 0.032) 1px,
                     transparent 1px,
-                    transparent 6px
+                    transparent 4px
                 ),
                 repeating-linear-gradient(
                     -45deg,
-                    rgba(79, 70, 229, 0.022) 0px,
-                    rgba(79, 70, 229, 0.022) 1px,
+                    rgba(79, 70, 229, 0.028) 0px,
+                    rgba(79, 70, 229, 0.028) 1px,
                     transparent 1px,
-                    transparent 6px
+                    transparent 4px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(220, 38, 38, 0.015) 0px,
+                    rgba(220, 38, 38, 0.015) 1px,
+                    transparent 1px,
+                    transparent 5px
                 );
         }
         #ac-camera-pip {
@@ -156,20 +236,107 @@
             bottom: 16px;
             left: 16px;
             z-index: 99992;
-            width: 118px;
-            height: 88px;
+            width: 132px;
+            height: 98px;
             border-radius: 14px;
-            overflow: hidden;
+            overflow: visible;
             background: #0f172a;
             border: 2px solid #ef4444;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.38);
             display: none;
+            touch-action: none;
+            cursor: grab;
+            user-select: none;
+        }
+        #ac-camera-pip:active {
+            cursor: grabbing;
+        }
+        #ac-camera-pip.cam-size-sm { width: 104px; height: 78px; }
+        #ac-camera-pip.cam-size-md { width: 132px; height: 98px; }
+        #ac-camera-pip.cam-size-lg { width: 172px; height: 128px; }
+        #ac-camera-pip.cam-minimized {
+            width: auto !important;
+            height: 34px !important;
+            padding: 0 10px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #ac-camera-pip.cam-minimized #ac-camera-viewport {
+            display: none !important;
+        }
+        #ac-camera-viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #020617;
         }
         #ac-camera-pip video {
             width: 100%;
             height: 100%;
             object-fit: cover;
             transform: scaleX(-1);
+            filter: blur(18px) brightness(0.75);
+            transition: filter 0.18s ease, opacity 0.18s ease;
+        }
+        #ac-camera-face-mask {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            background: rgba(15, 23, 42, 0.38);
+            color: #e2e8f0;
+            font-size: 10px;
+            font-weight: 700;
+            pointer-events: none;
+            text-align: center;
+            padding: 4px;
+        }
+        #ac-camera-controls-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            z-index: 4;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.82);
+            color: #f8fafc;
+            border: 1px solid rgba(255,255,255,0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        #ac-camera-pip.cam-minimized #ac-camera-controls-btn {
+            position: static;
+            width: 20px;
+            height: 20px;
+        }
+        #ac-camera-pip.cam-minimized #ac-camera-badge {
+            position: static;
+        }
+        #ac-camera-panel {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 0;
+            width: 225px;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            border-radius: 14px;
+            padding: 10px;
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.28);
+            z-index: 99993;
+            font-size: 11px;
+            cursor: default;
         }
         #ac-camera-badge {
             position: absolute;
@@ -218,30 +385,181 @@
 <body class="min-h-screen flex flex-col selection:bg-indigo-600 selection:text-white overflow-x-hidden">
 
     <!-- Toast Notification Container -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[99999] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
-    <!-- Anti-Photo Mesh & Dynamic Forensic Watermark -->
+    <!-- Anti-Photo Moire Mesh & Dynamic Forensic Watermark -->
     <div id="ac-anti-photo-mesh" class="no-print"></div>
     <div id="ac-watermark" class="no-print"><div id="ac-watermark-grid"></div></div>
 
-    <!-- Camera Proctoring PiP -->
-    <div id="ac-camera-pip" class="no-print">
-        <video id="ac-camera-video" autoplay muted playsinline></video>
-        <canvas id="ac-camera-canvas" width="64" height="48" class="hidden"></canvas>
-        <div id="ac-camera-badge"><span class="ac-rec-dot"></span><span>GIÁM SÁT</span></div>
+    <!-- Instant 0ms Blackout Curtain (Blocks mobile screenshot gestures / blur / focus loss) -->
+    <div id="ac-blackout-curtain" class="no-print">
+        <div class="w-16 h-16 rounded-2xl bg-rose-600/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-3xl">
+            <i class="fa-solid fa-eye-slash"></i>
+        </div>
+        <h3 class="text-lg font-extrabold text-white tracking-wide">MÀN HÌNH ĐÃ ĐƯỢC CHE BẢO VỆ</h3>
+        <p id="ac-blackout-reason" class="text-xs sm:text-sm text-slate-300 max-w-sm">Phát hiện thao tác nghi vấn chụp ảnh màn hình hoặc rời khỏi ứng dụng.</p>
     </div>
 
-    <!-- Safe Exam Setup Modal -->
-    <div id="ac-setup-modal" class="fixed inset-0 z-[99995] hidden items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
+    <!-- Camera Proctoring PiP (Face-Hide Privacy Mode + Draggable & Adjustable) -->
+    <div id="ac-camera-pip" class="cam-size-md no-print">
+        <div id="ac-camera-viewport">
+            <video id="ac-camera-video" autoplay muted playsinline></video>
+            <div id="ac-camera-face-mask">
+                <i class="fa-solid fa-user-secret text-base text-amber-300"></i>
+                <span>ĐÃ ẨN MẶT</span>
+            </div>
+        </div>
+        <canvas id="ac-camera-canvas" width="64" height="48" class="hidden"></canvas>
+        <div id="ac-camera-badge"><span class="ac-rec-dot"></span><span id="ac-camera-badge-txt">ẨN MẶT</span></div>
+        <button id="ac-camera-controls-btn" type="button" onclick="AntiCheatEngine.toggleCameraPanel(event)" title="Điều chỉnh Camera">
+            <i class="fa-solid fa-sliders"></i>
+        </button>
+
+        <!-- Adjustable Camera Settings Popover -->
+        <div id="ac-camera-panel" class="hidden space-y-2.5" onmousedown="event.stopPropagation()" ontouchstart="event.stopPropagation()">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                <span class="font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-camera text-rose-600"></i> Điều chỉnh Camera
+                </span>
+                <button type="button" onclick="AntiCheatEngine.toggleCameraPanel(event)" class="text-slate-400 hover:text-slate-700 px-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-1">
+                <span class="block text-[10px] font-bold uppercase text-slate-400">Chế độ ẩn mặt</span>
+                <div class="grid grid-cols-3 gap-1">
+                    <button type="button" id="acCamModeBlur" onclick="AntiCheatEngine.setCameraPrivacyMode('blur')" class="py-1 px-1.5 rounded-lg text-[10px] font-bold bg-rose-600 text-white">Che mờ</button>
+                    <button type="button" id="acCamModeHidden" onclick="AntiCheatEngine.setCameraPrivacyMode('hidden')" class="py-1 px-1.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700">Ẩn hẳn</button>
+                    <button type="button" id="acCamModeClear" onclick="AntiCheatEngine.setCameraPrivacyMode('clear')" class="py-1 px-1.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700">Hiện rõ</button>
+                </div>
+            </div>
+
+            <div class="space-y-1">
+                <div class="flex justify-between text-[10px] font-semibold text-slate-600">
+                    <span>Mức che mờ mặt</span>
+                    <span id="acCamBlurVal" class="font-bold text-rose-600">18px</span>
+                </div>
+                <input id="acCamBlurSlider" type="range" min="0" max="30" step="2" value="18" oninput="AntiCheatEngine.setCameraBlur(this.value)" class="w-full accent-rose-600 cursor-pointer" />
+            </div>
+
+            <div class="space-y-1">
+                <div class="flex justify-between text-[10px] font-semibold text-slate-600">
+                    <span>Độ rõ khung cam</span>
+                    <span id="acCamOpacityVal" class="font-bold text-indigo-600">100%</span>
+                </div>
+                <input id="acCamOpacitySlider" type="range" min="35" max="100" step="5" value="100" oninput="AntiCheatEngine.setCameraOpacity(this.value)" class="w-full accent-indigo-600 cursor-pointer" />
+            </div>
+
+            <div class="space-y-1">
+                <span class="block text-[10px] font-bold uppercase text-slate-400">Kích thước khung</span>
+                <div class="grid grid-cols-3 gap-1">
+                    <button type="button" onclick="AntiCheatEngine.setCameraSize('sm')" class="py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700">Nhỏ</button>
+                    <button type="button" onclick="AntiCheatEngine.setCameraSize('md')" class="py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700">Vừa</button>
+                    <button type="button" onclick="AntiCheatEngine.setCameraSize('lg')" class="py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700">Lớn</button>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-slate-400 leading-tight">
+                <i class="fa-solid fa-arrows-up-down-left-right mr-1"></i>Kéo giữ khung cam để di chuyển đến vị trí bất kỳ.
+            </p>
+        </div>
+    </div>
+
+    <!-- Start Exam Confirmation Gate (Shown ONLY when user clicks "Bắt đầu làm bài") -->
+    <div id="ac-student-gate-modal" class="fixed inset-0 z-[99994] hidden items-center justify-center bg-slate-950/85 backdrop-blur-md p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4 max-h-[92vh] overflow-y-auto">
+            <div class="w-14 h-14 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl mx-auto">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div>
+                <span class="inline-block px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-bold mb-2">
+                    KÍCH HOẠT CHỐNG GIAN LẬN KHI BẮT ĐẦU LÀM BÀI
+                </span>
+                <h3 class="text-lg font-extrabold text-slate-900">Xác Nhận Vào Làm Bài Thi</h3>
+                <p class="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
+                    Ngay sau khi bấm xác nhận bên dưới, hệ thống sẽ <strong>bắt đầu tính giờ và bật toàn bộ chế độ chống gian lận</strong> cho bài thi bạn đã chọn.
+                </p>
+            </div>
+
+            <!-- Student Identity Inputs directly inside Gate -->
+            <div class="bg-slate-50 rounded-xl p-3.5 border border-slate-200 text-left space-y-2.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Họ và tên thí sinh *</label>
+                        <input id="acGateNameInput" type="text" placeholder="Nhập họ tên..." class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Lớp / Mã số *</label>
+                        <input id="acGateClassInput" type="text" placeholder="VD: 12A1" class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                    </div>
+                </div>
+                <div class="text-[11px] text-slate-600 pt-1.5 border-t border-slate-200/80 space-y-1">
+                    <p><i class="fa-solid fa-file-lines text-indigo-600 w-4"></i> Đề đã chọn: <strong id="acGateExamTitle" class="text-slate-800">---</strong></p>
+                    <p><i class="fa-solid fa-triangle-exclamation text-rose-500 w-4"></i> Giới hạn vi phạm: <strong id="acGateMaxViolations" class="text-rose-600">3 lần</strong> (tự động khóa & nộp bài)</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <button onclick="AntiCheatEngine.enterLockedExamFromGate()" class="w-full py-3 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-200 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Bắt đầu làm bài ngay</span>
+                </button>
+                <button onclick="AntiCheatEngine.hideStudentGate()" class="w-full py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+                    <i class="fa-solid fa-arrow-left mr-1"></i>Quay lại chọn đề / chỉnh thông tin
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Login Modal (PIN Authentication) -->
+    <div id="ac-admin-login-modal" class="fixed inset-0 z-[99996] hidden items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center text-base">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Xác Thực Quyền Admin</h3>
+                        <p class="text-[11px] text-slate-500">Chỉ Admin mới được bật/tắt Chống Gian Lận</p>
+                    </div>
+                </div>
+                <button onclick="AntiCheatEngine.closeAdminLoginModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-2.5">
+                <label class="block text-xs font-semibold text-slate-700">Nhập mật khẩu / mã PIN Admin:</label>
+                <input id="acAdminPinInput" type="password" placeholder="Mặc định: admin2026" onkeydown="if(event.key==='Enter') AntiCheatEngine.verifyAdminPin()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <p id="acAdminPinError" class="hidden text-xs font-semibold text-rose-600"><i class="fa-solid fa-circle-xmark mr-1"></i>Mật khẩu Admin không đúng!</p>
+                <p class="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <i class="fa-solid fa-circle-info text-indigo-500 mr-1"></i>
+                    Mật khẩu mặc định ban đầu là <code class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-bold">admin2026</code>. Admin có thể đổi mật khẩu ngay sau khi đăng nhập.
+                </p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2">
+                <button onclick="AntiCheatEngine.closeAdminLoginModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Đóng</button>
+                <button onclick="AntiCheatEngine.verifyAdminPin()" class="px-5 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-key mr-1"></i>Đăng nhập Admin
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Anti-Cheat Control Panel Modal (ONLY accessible by Admin) -->
+    <div id="ac-setup-modal" class="fixed inset-0 z-[99996] hidden items-center justify-center bg-slate-900/75 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[92vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg shrink-0">
-                        <i class="fa-solid fa-shield-halved"></i>
+                    <div class="w-10 h-10 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center text-lg shrink-0">
+                        <i class="fa-solid fa-user-shield"></i>
                     </div>
                     <div>
-                        <h3 class="text-base font-bold text-slate-900">Bật Chế Độ Thi An Toàn (Chống Gian Lận)</h3>
-                        <p class="text-xs text-slate-500">Bảo vệ đề thi & truy vết chống chụp ảnh từ máy khác</p>
+                        <h3 class="text-base font-bold text-slate-900">Bảng Điều Khiển Admin — Chống Gian Lận</h3>
+                        <p class="text-xs text-slate-500">Chỉ Admin mới có quyền bật/tắt; người dùng khác vẫn dùng web bình thường</p>
                     </div>
                 </div>
                 <button onclick="AntiCheatEngine.closeSetupModal()" class="w-8 h-8 rounded-lg text-slate-400 hover:bg-slate-100 flex items-center justify-center">
@@ -249,47 +567,76 @@
                 </button>
             </div>
 
-            <div class="space-y-3 text-xs">
+            <!-- Master Admin Switch -->
+            <div class="p-3.5 rounded-xl bg-slate-900 text-white flex items-center justify-between gap-3 mb-4">
+                <div>
+                    <p class="text-xs font-extrabold uppercase tracking-wider text-amber-400">Trạng thái Hệ thống Chống Gian Lận</p>
+                    <p id="acAdminMasterDesc" class="text-[11px] text-slate-300 mt-0.5">Khi BẬT, mọi thí sinh đều bắt buộc thi an toàn và không thể tự tắt.</p>
+                </div>
+                <label class="inline-flex items-center cursor-pointer shrink-0">
+                    <input id="acAdminMasterToggle" type="checkbox" class="sr-only peer" onchange="AntiCheatEngine.onMasterTogglePreview()" />
+                    <div class="relative w-12 h-6 bg-slate-600 rounded-full peer peer-checked:bg-rose-500 after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6"></div>
+                </label>
+            </div>
+
+            <div id="acAdminOptionsBody" class="space-y-3 text-xs">
                 <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
                     <input id="acOptLockTab" type="checkbox" checked class="mt-0.5 accent-rose-600 rounded" />
                     <div>
-                        <p class="font-bold text-slate-800">Ép Toàn màn hình, Khóa chuyển Tab/App & Chia đôi màn hình</p>
-                        <p class="text-slate-500 mt-0.5">Phát hiện rời ứng dụng, kéo thanh thông báo, mở cửa sổ nổi, chặn copy & phím chụp màn hình. Vi phạm tối đa <strong class="text-rose-600">3 lần</strong> sẽ tự động nộp bài.</p>
+                        <p class="font-bold text-slate-800">1. Ép Toàn màn hình, Khóa chuyển Tab/App & Chia đôi màn hình</p>
+                        <p class="text-slate-500 mt-0.5">Bắt mọi hành vi thoát toàn màn hình, chuyển app, kéo thanh thông báo, thu nhỏ/chia đôi màn hình trên cả điện thoại và máy tính.</p>
                     </div>
                 </label>
 
-                <label class="flex items-start gap-3 p-3 rounded-xl bg-rose-50/60 border border-rose-200 cursor-pointer">
-                    <input id="acOptWatermark" type="checkbox" checked class="mt-0.5 accent-rose-600 rounded" />
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-rose-50/70 border border-rose-200 cursor-pointer">
+                    <input id="acOptMobileShot" type="checkbox" checked class="mt-0.5 accent-rose-600 rounded" />
                     <div>
-                        <p class="font-bold text-rose-900">Chống chụp từ máy khác: Watermark động + Lưới vân + Làm mờ tức thì</p>
-                        <p class="text-slate-600 mt-0.5">Phủ kín màn hình bằng <strong>Họ tên + Lớp + Mã phiên + Giờ:Phút:Giây thực</strong> tự động dịch chuyển mỗi 3 giây. Dù chụp bằng điện thoại khác vẫn dính rõ danh tính thí sinh.</p>
+                        <p class="font-bold text-rose-900">2. Chống tự chụp màn hình (Điện thoại & Máy tính — Màn chắn đen 0ms)</p>
+                        <p class="text-slate-600 mt-0.5">Phát hiện <strong>vuốt 3 ngón</strong>, ngắt cảm ứng hệ thống (<code>touchcancel</code>), nhấn phím cứng âm lượng trên điện thoại, phím <code>PrintScreen</code> / Snipping Tool trên PC và lập tức phủ màn đen 0ms + ghi vi phạm.</p>
                     </div>
                 </label>
 
-                <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2">
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-indigo-50/70 border border-indigo-200 cursor-pointer">
+                    <input id="acOptWatermark" type="checkbox" checked class="mt-0.5 accent-indigo-600 rounded" />
+                    <div>
+                        <p class="font-bold text-indigo-900">3. Chống chụp từ máy bên ngoài: Watermark động dày đặc + Lưới vân Moiré</p>
+                        <p class="text-slate-600 mt-0.5">Phủ kín <strong>Họ tên • Lớp • Mã phiên • Giờ:Phút:Giây thực</strong> đổi vị trí mỗi 2 giây kèm lưới vân quang học gây nhiễu sọc Moiré khi dùng máy khác giơ lên chụp (cả điện thoại & PC).</p>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-violet-50/80 border-2 border-violet-300 cursor-pointer">
+                    <input id="acOptHoldToView" type="checkbox" checked class="mt-0.5 accent-violet-600 rounded" />
+                    <div>
+                        <p class="font-bold text-violet-900">4. Chế độ "Giữ tay mới hiện đề" (Siêu gắt — Chống chụp từ máy khác)</p>
+                        <p class="text-slate-600 mt-0.5">Mặc định câu hỏi luôn bị che mờ hoàn toàn. Thí sinh chỉ được giữ đề bằng <strong>1 trong 2 cách: (1) Chuột / chạm giữ nút</strong> hoặc <strong>(2) Nhấn giữ 1 phím khác bất kỳ</strong> (khóa các phím thừa còn lại); vừa nhả là tắt mờ trong <strong>0ms</strong> — rất khó vừa giữ vừa căn máy thứ 2 chụp.</p>
+                    </div>
+                </label>
+
+                <div class="p-3 rounded-xl bg-amber-50/80 border-2 border-amber-300 space-y-2">
                     <label class="flex items-start gap-3 cursor-pointer">
-                        <input id="acOptPerQuestion" type="checkbox" onchange="document.getElementById('acPerQSecondsWrap').classList.toggle('hidden', !this.checked)" class="mt-0.5 accent-amber-600 rounded" />
+                        <input id="acOptPerQuestion" type="checkbox" checked onchange="document.getElementById('acPerQSecondsWrap').classList.toggle('hidden', !this.checked)" class="mt-0.5 accent-amber-600 rounded" />
                         <div>
-                            <p class="font-bold text-amber-900">Chế độ Chống Chụp Nhanh (Đếm ngược từng câu & Khóa quay lại)</p>
-                            <p class="text-slate-600 mt-0.5">Giới hạn thời gian ngắn cho mỗi câu và không cho quay lại câu cũ — khiến thí sinh không kịp dùng máy thứ 2 chụp gửi đi nhờ giải.</p>
+                            <p class="font-bold text-amber-900">5. Bật sẵn Đếm ngược từng câu & Khóa quay lại (Chống chụp gửi nhờ giải)</p>
+                            <p class="text-slate-600 mt-0.5">Giới hạn thời gian cực ngắn cho từng câu, hết giờ tự nhảy câu tiếp theo và khóa quay lại câu cũ.</p>
                         </div>
                     </label>
-                    <div id="acPerQSecondsWrap" class="hidden pl-7 flex items-center gap-2">
+                    <div id="acPerQSecondsWrap" class="pl-7 flex items-center gap-2">
                         <span class="font-semibold text-slate-700">Thời gian mỗi câu:</span>
                         <select id="acOptPerQSeconds" class="px-2.5 py-1 rounded-lg border border-amber-300 bg-white font-bold text-slate-800">
-                            <option value="20">20 giây / câu (Siêu gắt)</option>
-                            <option value="30" selected>30 giây / câu (Khuyên dùng)</option>
+                            <option value="15">15 giây / câu (Cực gắt)</option>
+                            <option value="20" selected>20 giây / câu (Khuyên dùng)</option>
+                            <option value="30">30 giây / câu</option>
                             <option value="45">45 giây / câu</option>
                             <option value="60">60 giây / câu</option>
                         </select>
                     </div>
                 </div>
 
-                <label class="flex items-start gap-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-200 cursor-pointer">
-                    <input id="acOptCamera" type="checkbox" class="mt-0.5 accent-indigo-600 rounded" />
+                <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+                    <input id="acOptCamera" type="checkbox" checked class="mt-0.5 accent-indigo-600 rounded" />
                     <div>
-                        <p class="font-bold text-indigo-900">Giám sát Camera trước (Phát hiện che camera)</p>
-                        <p class="text-slate-600 mt-0.5">Hiển thị khung camera giám sát nhỏ ở góc màn hình. Nếu thí sinh che tối camera sẽ tự động ghi nhận vi phạm.</p>
+                        <p class="font-bold text-slate-800">6. Giám sát Camera trước — Tự động Ẩn mặt & Điều chỉnh được</p>
+                        <p class="text-slate-500 mt-0.5">Mặc định <strong>che mờ hoàn toàn khuôn mặt</strong> (hoặc thu gọn chạy ngầm), có thể kéo thả vị trí, đổi kích thước/độ mờ tùy ý mà vẫn giám sát che ống kính.</p>
                     </div>
                 </label>
 
@@ -303,21 +650,58 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Xáo trộn đề & đáp án</label>
+                        <label class="block font-semibold text-slate-700 mb-1">Xáo trộn thứ tự câu hỏi</label>
                         <select id="acOptShuffle" class="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 font-bold text-slate-800">
                             <option value="yes" selected>Có (Trộn câu hỏi)</option>
                             <option value="no">Giữ nguyên thứ tự</option>
                         </select>
                     </div>
                 </div>
+
+                <!-- Auto-Enforce Distribution for ALL Users (Link + Locked HTML Export) -->
+                <div class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2.5">
+                    <div>
+                        <p class="font-bold text-emerald-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-users-gear text-emerald-600"></i>
+                            <span>Áp dụng tự động cho TẤT CẢ mọi người (Mọi máy)</span>
+                        </p>
+                        <p class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                            Khi gửi cho nhiều học sinh trên các điện thoại/máy tính khác nhau, dùng 1 trong 2 cách dưới đây để <strong>ai mở lên cũng bị tự động bật chống gian lận ngay khi bắt đầu làm bài</strong>:
+                        </p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button type="button" onclick="AntiCheatEngine.copyGlobalEnforceLink()" class="py-2 px-3 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-link"></i>
+                            <span>Copy Link Thi Bắt Buộc</span>
+                        </button>
+                        <button type="button" onclick="AntiCheatEngine.exportLockedHtmlFile()" class="py-2 px-3 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-file-shield"></i>
+                            <span>Tải file HTML đã bật sẵn</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Change Admin PIN -->
+                <div class="pt-3 border-t border-slate-100">
+                    <label class="block font-semibold text-slate-700 mb-1">Đổi mật khẩu Admin (tùy chọn)</label>
+                    <div class="flex gap-2">
+                        <input id="acNewAdminPinInput" type="password" placeholder="Nhập mật khẩu Admin mới (>= 4 ký tự)..." class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        <button onclick="AntiCheatEngine.changeAdminPin()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition">Lưu PIN</button>
+                    </div>
+                </div>
             </div>
 
-            <div class="flex items-center justify-end gap-2.5 mt-5 pt-4 border-t border-slate-100">
-                <button onclick="AntiCheatEngine.closeSetupModal()" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Hủy</button>
-                <button onclick="AntiCheatEngine.confirmStartFromModal()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-200 transition flex items-center gap-2">
-                    <i class="fa-solid fa-lock"></i>
-                    <span>Kích hoạt & Bắt đầu Thi An Toàn</span>
+            <div class="flex flex-wrap items-center justify-between gap-2.5 mt-5 pt-4 border-t border-slate-100">
+                <button onclick="AntiCheatEngine.logoutAdmin()" class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i>Đăng xuất Admin
                 </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="AntiCheatEngine.closeSetupModal()" class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">Đóng</button>
+                    <button onclick="AntiCheatEngine.saveAdminSettings()" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-200 transition flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        <span>Lưu & Áp dụng</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -560,9 +944,9 @@
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2">
-                            <button id="acToggleSafeModeBtn" onclick="AntiCheatEngine.openSetupModal()" class="px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5">
-                                <i class="fa-solid fa-shield-halved"></i>
-                                <span id="acToggleSafeModeText">Bật Chống Gian Lận</span>
+                            <button id="acToggleSafeModeBtn" onclick="AntiCheatEngine.openAdminEntry()" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-amber-300 border border-slate-700 hover:bg-slate-800 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-user-shield"></i>
+                                <span id="acToggleSafeModeText">Admin: Chống Gian Lận</span>
                             </button>
 
                             <button id="autoFillDemoBtn" onclick="autoFillDemoAnswers()" class="px-3 py-2 rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition flex items-center gap-1.5">
@@ -578,12 +962,29 @@
                     </div>
                 </div>
 
+                <!-- Pre-Exam Ready Banner (Shown BEFORE clicking "Bắt đầu làm bài") -->
+                <div id="acPreExamReadyBar" class="hidden pt-3 border-t border-indigo-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-indigo-50/60 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 px-4 sm:px-5 py-3.5 rounded-b-2xl">
+                    <div class="flex items-start sm:items-center gap-2.5 text-xs">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-900">Bước 1: Hãy nhập Họ tên, Lớp, chọn Môn & Đề thi ở trên — Sau đó bấm <span class="text-rose-600">"Bắt đầu làm bài"</span></p>
+                            <p class="text-[11px] text-slate-600 mt-0.5">Chế độ Chống Gian Lận chưa bật khi bạn đang chọn đề; hệ thống chỉ tự động kích hoạt ngay khi bạn bấm bắt đầu làm bài.</p>
+                        </div>
+                    </div>
+                    <button id="acStartExamBtn" type="button" onclick="AntiCheatEngine.openStartConfirmation()" class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-rose-600 text-white hover:bg-rose-700 shadow-md shadow-rose-200 transition flex items-center justify-center gap-2 shrink-0">
+                        <i class="fa-solid fa-play"></i>
+                        <span>Bắt đầu làm bài</span>
+                    </button>
+                </div>
+
                 <!-- Live Anti-Cheat Active Status Strip -->
                 <div id="acStatusStrip" class="hidden pt-3 border-t border-rose-100 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold">
                             <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                            <span>CHẾ ĐỘ THI AN TOÀN ĐANG BẬT</span>
+                            <span>CHỐNG GIAN LẬN ĐANG BẬT (ADMIN)</span>
                         </span>
                         <span id="acSessionIdBadge" class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold">Mã phiên: #---</span>
                         <span id="acViolationCounterBadge" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">Vi phạm: 0/3</span>
@@ -592,7 +993,7 @@
                         </span>
                     </div>
                     <span class="text-[11px] text-rose-600 font-semibold">
-                        <i class="fa-solid fa-fingerprint mr-1"></i>Watermark chống chụp & khóa chuyển tab đang hoạt động
+                        <i class="fa-solid fa-fingerprint mr-1"></i>Bảo vệ chống chụp (ĐT & PC) đang hoạt động
                     </span>
                 </div>
             </div>
@@ -600,7 +1001,35 @@
             <!-- Main Exam Grid: Left Question Area (8 cols) + Right Palette & Matrix Info (4 cols) -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <!-- Question Display Card -->
-                <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <div id="examQuestionCard" class="relative lg:col-span-8 bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+                    <!-- Pre-Start Waiting Overlay (Lets user pick Subject/Exam first, hides answers until clicking Start) -->
+                    <div id="ac-prestart-card-overlay" class="hidden absolute inset-0 z-20 bg-slate-900/65 backdrop-blur-md flex-col items-center justify-center p-6 text-center">
+                        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 space-y-3">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl mx-auto">
+                                <i class="fa-solid fa-list-check"></i>
+                            </div>
+                            <h4 class="text-base font-extrabold text-slate-900">Chọn đề thi xong rồi mới bắt đầu</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed">
+                                Bạn có thể thoải mái chọn <strong>Môn học</strong>, chọn <strong>Bộ đề</strong> hoặc qua tab <strong>Tạo đề & Quản lý</strong> để tạo đề trước. Khi nào sẵn sàng làm bài, bấm nút bên dưới để vào chế độ thi an toàn.
+                            </p>
+                            <button type="button" onclick="AntiCheatEngine.openStartConfirmation()" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-extrabold shadow-md shadow-rose-200 transition flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Bắt đầu làm bài ngay</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Active Anti-External-Photo Veil Overlay -->
+                    <div id="ac-veil-overlay" onclick="AntiCheatEngine.revealQuestionCard()" ontouchstart="AntiCheatEngine.revealQuestionCard()" class="absolute inset-0 z-20 bg-slate-900/55 backdrop-blur-md flex-col items-center justify-center p-6 text-center cursor-pointer">
+                        <div class="bg-white/95 rounded-2xl p-5 max-w-xs w-full shadow-2xl border border-slate-200 space-y-2.5">
+                            <div class="w-11 h-11 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center text-xl mx-auto">
+                                <i class="fa-solid fa-hand-pointer"></i>
+                            </div>
+                            <h4 class="text-sm font-extrabold text-slate-900">Đề thi tạm che chống chụp ngoài</h4>
+                            <p class="text-xs text-slate-600">Chạm vào màn hình hoặc di chuột vào khung đề để tiếp tục đọc câu hỏi.</p>
+                            <span class="inline-block px-4 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-bold">Chạm để hiện đề</span>
+                        </div>
+                    </div>
                     <div class="w-full bg-slate-100 h-1.5">
                         <div id="examProgressBar" class="bg-indigo-600 h-1.5 transition-all duration-300" style="width: 10%"></div>
                     </div>
@@ -629,8 +1058,28 @@
                             </button>
                         </div>
 
-                        <!-- Question Stem / Context -->
-                        <div class="mb-6">
+                        <!-- Hold-to-View Control Bar (Shown when Hold-to-View mode is ON) -->
+                        <div id="ac-hold-bar" class="sticky bottom-3 sm:static z-30 mb-4 p-3 rounded-xl bg-rose-50/95 backdrop-blur-md border-2 border-rose-400 shadow-lg sm:shadow-none flex-col sm:flex-row items-center justify-between gap-2.5">
+                            <div class="text-xs text-rose-900">
+                                <p class="font-extrabold flex items-center gap-1.5"><i class="fa-solid fa-fingerprint text-rose-600"></i> GIỮ TAY MỚI HIỆN ĐỀ (VUỐT LƯỚT THOẢI MÁI, BỎ TAY LÀ ẨN)</p>
+                                <p class="text-[11px] text-rose-700 mt-0.5"><strong>Điện thoại:</strong> Chạm giữ vào màn hình / khung đề (vừa giữ vừa vuốt lên xuống để đọc vẫn hiện, nhấc tay ra là ẩn ngay) hoặc giữ nút bên cạnh bằng 1 tay và chọn đáp án bằng tay kia. <strong>Máy tính:</strong> Giữ chuột hoặc giữ <strong>1 phím bất kỳ</strong>.</p>
+                            </div>
+                            <button id="acHoldToViewBtn" type="button"
+                                onmousedown="AntiCheatEngine.holdRevealStart(event)"
+                                onmouseup="AntiCheatEngine.holdRevealEnd()"
+                                onmouseleave="AntiCheatEngine.holdRevealEnd()"
+                                ontouchstart="AntiCheatEngine.holdRevealStart(event)"
+                                ontouchend="AntiCheatEngine.holdRevealEnd()"
+                                ontouchcancel="AntiCheatEngine.holdRevealEnd()"
+                                class="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-xl bg-rose-600 active:bg-emerald-600 text-white text-xs font-extrabold shadow-md select-none shrink-0 flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-hand-holding-heart"></i>
+                                <span id="acHoldBtnText">GIỮ TAY / CHUỘT / 1 PHÍM ĐỂ ĐỌC ĐỀ</span>
+                            </button>
+                        </div>
+
+                        <!-- Question Stem / Context (with Direct Watermark Overlay) -->
+                        <div class="relative mb-6">
+                            <div id="ac-qtext-watermark"></div>
                             <div id="qContextBox" class="hidden mb-4 p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-sm text-slate-700 leading-relaxed"></div>
                             <h2 id="qText" class="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed"></h2>
                         </div>
@@ -1672,6 +2121,9 @@
             syncNewQSkillOptions();
             syncQuickMatrixSubjectLabels();
             startExamTimer();
+            if (typeof AntiCheatEngine !== 'undefined') {
+                AntiCheatEngine.init();
+            }
         });
 
         function loadPersistedData() {
@@ -1883,6 +2335,9 @@
                 renderQuestionBankList();
                 updateAnswerKeyHint();
             }
+            if (tabId === 'exam' && typeof AntiCheatEngine !== 'undefined') {
+                AntiCheatEngine.checkMandatoryGate();
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -1995,12 +2450,16 @@
             updateHeaderStudentDisplay();
             updateTimerUI();
             renderExamView();
+            if (!seedDemo && typeof AntiCheatEngine !== 'undefined') {
+                AntiCheatEngine.onExamSessionLaunched();
+            }
         }
 
         function startExamTimer() {
             if (appState.timerInterval) clearInterval(appState.timerInterval);
             appState.timerInterval = setInterval(() => {
                 if (appState.timerPaused || appState.activeTab !== 'exam') return;
+                if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isWaitingToStart()) return;
                 if (appState.timerSeconds > 0) {
                     appState.timerSeconds--;
                     updateTimerUI();
@@ -2159,6 +2618,9 @@
         }
 
         function selectOption(qId, optIdx) {
+            if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isEnforcedByAdmin() && !AntiCheatEngine.isActive()) {
+                AntiCheatEngine.autoActivateOnFirstAction();
+            }
             appState.userAnswers[qId] = optIdx;
             renderExamView();
         }
@@ -2175,6 +2637,7 @@
                 renderExamView();
                 if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive()) {
                     AntiCheatEngine.resetPerQuestionTimer();
+                    AntiCheatEngine.revealQuestionCard();
                 }
             }
         }
@@ -2195,6 +2658,7 @@
             renderExamView();
             if (typeof AntiCheatEngine !== 'undefined' && AntiCheatEngine.isActive()) {
                 AntiCheatEngine.resetPerQuestionTimer();
+                AntiCheatEngine.revealQuestionCard();
             }
         }
 
@@ -3521,22 +3985,36 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
         }
 
         // ---------------------------------------------------------
-        // 16. ANTI-CHEAT & ANTI-EXTERNAL-PHOTO ENGINE (PROCTORING)
+        // 16. ADMIN ROLE + ANTI-CHEAT + MOBILE SCREENSHOT & EXTERNAL PHOTO ENGINE (V2)
         // ---------------------------------------------------------
         const AntiCheatEngine = (() => {
+            const ADMIN_CFG_KEY = 'edumetrics_ac_admin_config_v2';
+            const ADMIN_PIN_KEY = 'edumetrics_ac_admin_pin_hash_v2';
+            const DEFAULT_ADMIN_PIN = 'admin2026';
+            // Baked global policy (auto-updated when Admin exports a pre-locked HTML file)
+            const BAKED_GLOBAL_POLICY = /*__AC_BAKED_POLICY_START__*/{"enabledByAdmin":true,"lockTab":true,"mobileShot":true,"watermark":true,"holdToView":true,"antiExternalVeil":true,"perQuestion":true,"perQuestionSec":20,"camera":true,"maxViolations":3,"shuffle":true}/*__AC_BAKED_POLICY_END__*/;
+
+            let isAdminAuthenticated = false;
             let active = false;
             let wasEnabledInSession = false;
             let sessionId = '';
+            let deviceTag = '';
             let violations = 0;
-            let maxViolations = 3;
             let violationLogs = [];
             let forcedSubmit = false;
+
             let config = {
+                enabledByAdmin: true,
                 lockTab: true,
+                mobileShot: true,
                 watermark: true,
-                perQuestion: false,
-                perQuestionSec: 30,
-                camera: false
+                holdToView: true,
+                antiExternalVeil: true,
+                perQuestion: true,
+                perQuestionSec: 20,
+                camera: true,
+                maxViolations: 3,
+                shuffle: true
             };
 
             let wmTimer = null;
@@ -3546,18 +4024,183 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
             let cameraCheckTimer = null;
             let darkFramesCount = 0;
             let lastViolationAt = 0;
+            let blackoutTimer = null;
+            let inactivityTimer = null;
             let baselineWidth = window.innerWidth;
             let baselineHeight = window.innerHeight;
+
+            // Simple deterministic hash for Admin PIN storage
+            function hashPin(str) {
+                let h = 2166136261;
+                const s = 'EM_SALT_2026_' + String(str || '');
+                for (let i = 0; i < s.length; i++) {
+                    h ^= s.charCodeAt(i);
+                    h = Math.imul(h, 16777619);
+                }
+                return 'H' + (h >>> 0).toString(16);
+            }
+
+            function getStoredPinHash() {
+                try {
+                    return localStorage.getItem(ADMIN_PIN_KEY) || hashPin(DEFAULT_ADMIN_PIN);
+                } catch (e) {
+                    return hashPin(DEFAULT_ADMIN_PIN);
+                }
+            }
+
+            function loadAdminConfig() {
+                // 1. Apply baked policy from HTML file first (for offline/Zalo file sharing)
+                if (BAKED_GLOBAL_POLICY && typeof BAKED_GLOBAL_POLICY === 'object') {
+                    Object.assign(config, BAKED_GLOBAL_POLICY);
+                    if (BAKED_GLOBAL_POLICY.pinHash) {
+                        try {
+                            if (!localStorage.getItem(ADMIN_PIN_KEY)) {
+                                localStorage.setItem(ADMIN_PIN_KEY, BAKED_GLOBAL_POLICY.pinHash);
+                            }
+                        } catch (e) {}
+                    }
+                }
+
+                // 2. Apply localStorage config (if Admin changed it locally)
+                try {
+                    const raw = localStorage.getItem(ADMIN_CFG_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        Object.assign(config, parsed);
+                    }
+                } catch (e) {}
+
+                // 3. Highest priority: URL auto-enforce link (?ac_lock=1&cfg=...) for all users on any device
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('ac_lock') === '1') {
+                        config.enabledByAdmin = true;
+                        const encoded = params.get('cfg');
+                        if (encoded) {
+                            const decoded = JSON.parse(decodeURIComponent(atob(encoded)));
+                            Object.assign(config, decoded, { enabledByAdmin: true });
+                            if (decoded.pinHash) {
+                                localStorage.setItem(ADMIN_PIN_KEY, decoded.pinHash);
+                            }
+                        }
+                        persistAdminConfig();
+                    }
+                } catch (e) {}
+            }
+
+            function persistAdminConfig() {
+                try {
+                    localStorage.setItem(ADMIN_CFG_KEY, JSON.stringify(config));
+                } catch (e) {}
+            }
+
+            function detectDeviceTag() {
+                const ua = navigator.userAgent || '';
+                const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(ua);
+                const os = /Android/i.test(ua) ? 'AND' : (/iPhone|iPad|iPod/i.test(ua) ? 'IOS' : 'PC');
+                return `${os}-${screen.width}x${screen.height}${isMobile ? 'M' : 'D'}`;
+            }
 
             function genSessionId() {
                 return 'EM' + Math.random().toString(36).substring(2, 7).toUpperCase();
             }
 
-            function openSetupModal() {
-                if (active) {
-                    showToast('Chế độ Thi An Toàn đang bật. Hãy nộp bài khi hoàn thành!', 'info');
+            function init() {
+                deviceTag = detectDeviceTag();
+                loadAdminConfig();
+                updateAdminButtonUI();
+                syncPreExamUI();
+            }
+
+            function updateAdminButtonUI() {
+                const btn = document.getElementById('acToggleSafeModeBtn');
+                const txt = document.getElementById('acToggleSafeModeText');
+                if (!btn || !txt) return;
+                if (config.enabledByAdmin) {
+                    btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white border border-rose-700 hover:bg-rose-700 shadow-sm transition flex items-center gap-1.5';
+                    txt.textContent = isAdminAuthenticated ? 'Admin: Đang BẬT (Cài đặt)' : 'Chống Gian Lận: ĐANG BẬT';
+                } else {
+                    btn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-slate-900 text-amber-300 border border-slate-700 hover:bg-slate-800 transition flex items-center gap-1.5';
+                    txt.textContent = isAdminAuthenticated ? 'Admin: Đang TẮT (Cài đặt)' : 'Admin: Chống Gian Lận';
+                }
+            }
+
+            // === ADMIN AUTH & CONTROL PANEL ===
+            function openAdminEntry() {
+                if (isAdminAuthenticated) {
+                    openSetupModal();
+                } else {
+                    const m = document.getElementById('ac-admin-login-modal');
+                    document.getElementById('acAdminPinInput').value = '';
+                    document.getElementById('acAdminPinError').classList.add('hidden');
+                    m.classList.remove('hidden');
+                    m.classList.add('flex');
+                    setTimeout(() => document.getElementById('acAdminPinInput').focus(), 60);
+                }
+            }
+
+            function closeAdminLoginModal() {
+                const m = document.getElementById('ac-admin-login-modal');
+                m.classList.add('hidden');
+                m.classList.remove('flex');
+            }
+
+            function verifyAdminPin() {
+                const input = document.getElementById('acAdminPinInput').value.trim();
+                const errEl = document.getElementById('acAdminPinError');
+                if (hashPin(input) === getStoredPinHash()) {
+                    isAdminAuthenticated = true;
+                    closeAdminLoginModal();
+                    updateAdminButtonUI();
+                    openSetupModal();
+                    showToast('Đăng nhập quyền Admin thành công!', 'success');
+                } else {
+                    errEl.classList.remove('hidden');
+                }
+            }
+
+            function logoutAdmin() {
+                isAdminAuthenticated = false;
+                closeSetupModal();
+                updateAdminButtonUI();
+                showToast('Đã đăng xuất quyền Admin. Thí sinh hãy chọn đề và bấm "Bắt đầu làm bài".', 'info');
+                syncPreExamUI();
+            }
+
+            function changeAdminPin() {
+                if (!isAdminAuthenticated) return;
+                const newPin = document.getElementById('acNewAdminPinInput').value.trim();
+                if (newPin.length < 4) {
+                    showToast('Mật khẩu Admin mới phải có ít nhất 4 ký tự.', 'warning');
                     return;
                 }
+                try {
+                    localStorage.setItem(ADMIN_PIN_KEY, hashPin(newPin));
+                    document.getElementById('acNewAdminPinInput').value = '';
+                    showToast('Đã cập nhật mật khẩu Admin mới thành công!', 'success');
+                } catch (e) {
+                    showToast('Không thể lưu mật khẩu mới.', 'warning');
+                }
+            }
+
+            function openSetupModal() {
+                if (!isAdminAuthenticated) {
+                    openAdminEntry();
+                    return;
+                }
+                document.getElementById('acAdminMasterToggle').checked = !!config.enabledByAdmin;
+                document.getElementById('acOptLockTab').checked = !!config.lockTab;
+                document.getElementById('acOptMobileShot').checked = !!config.mobileShot;
+                document.getElementById('acOptWatermark').checked = !!config.watermark;
+                document.getElementById('acOptHoldToView').checked = !!config.holdToView;
+                document.getElementById('acOptPerQuestion').checked = !!config.perQuestion;
+                document.getElementById('acPerQSecondsWrap').classList.toggle('hidden', !config.perQuestion);
+                document.getElementById('acOptPerQSeconds').value = String(config.perQuestionSec || 20);
+                document.getElementById('acOptCamera').checked = !!config.camera;
+                document.getElementById('acOptMaxViolations').value = String(config.maxViolations || 3);
+                document.getElementById('acOptShuffle').value = config.shuffle ? 'yes' : 'no';
+                onMasterTogglePreview();
+
                 const m = document.getElementById('ac-setup-modal');
                 m.classList.remove('hidden');
                 m.classList.add('flex');
@@ -3569,28 +4212,204 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 m.classList.remove('flex');
             }
 
-            async function confirmStartFromModal() {
+            function onMasterTogglePreview() {
+                const isOn = document.getElementById('acAdminMasterToggle').checked;
+                const body = document.getElementById('acAdminOptionsBody');
+                body.style.opacity = isOn ? '1' : '0.45';
+            }
+
+            async function saveAdminSettings() {
+                if (!isAdminAuthenticated) {
+                    showToast('Chỉ Admin mới có quyền lưu cấu hình này.', 'warning');
+                    return;
+                }
+                config.enabledByAdmin = document.getElementById('acAdminMasterToggle').checked;
                 config.lockTab = document.getElementById('acOptLockTab').checked;
+                config.mobileShot = document.getElementById('acOptMobileShot').checked;
                 config.watermark = document.getElementById('acOptWatermark').checked;
+                config.holdToView = document.getElementById('acOptHoldToView').checked;
+                config.antiExternalVeil = config.holdToView;
                 config.perQuestion = document.getElementById('acOptPerQuestion').checked;
                 config.perQuestionSec = parseInt(document.getElementById('acOptPerQSeconds').value, 10) || 30;
                 config.camera = document.getElementById('acOptCamera').checked;
-                maxViolations = parseInt(document.getElementById('acOptMaxViolations').value, 10) || 3;
-                const doShuffle = document.getElementById('acOptShuffle').value === 'yes';
+                config.maxViolations = parseInt(document.getElementById('acOptMaxViolations').value, 10) || 3;
+                config.shuffle = document.getElementById('acOptShuffle').value === 'yes';
 
+                persistAdminConfig();
                 closeSetupModal();
-                syncStudentProfile();
+                updateAdminButtonUI();
 
+                if (config.enabledByAdmin) {
+                    stopProtection();
+                    hideStudentGate();
+                    syncPreExamUI();
+                    showToast('Admin đã BẬT Chống Gian Lận! Hệ thống sẽ tự động kích hoạt khi thí sinh chọn đề và bấm "Bắt đầu làm bài".', 'success');
+                } else {
+                    stopProtection();
+                    hideStudentGate();
+                    syncPreExamUI();
+                    showToast('Admin đã TẮT hệ thống Chống Gian Lận. Mọi người có thể làm bài tự do.', 'info');
+                }
+            }
+
+            // === PRE-EXAM READY STATE (ALLOW PICKING EXAM FIRST; ACTIVATE ONLY ON START) ===
+            function syncPreExamUI() {
+                const readyBar = document.getElementById('acPreExamReadyBar');
+                const cardOverlay = document.getElementById('ac-prestart-card-overlay');
+                const shouldShowReady = !!config.enabledByAdmin && !active;
+
+                if (readyBar) {
+                    readyBar.classList.toggle('hidden', !shouldShowReady);
+                }
+                if (cardOverlay) {
+                    if (shouldShowReady) {
+                        cardOverlay.classList.remove('hidden');
+                        cardOverlay.classList.add('flex');
+                    } else {
+                        cardOverlay.classList.add('hidden');
+                        cardOverlay.classList.remove('flex');
+                    }
+                }
+            }
+
+            function checkMandatoryGate() {
+                // Never auto-lock on page load or tab switch; just keep Pre-Exam Ready UI synced
+                syncPreExamUI();
+            }
+
+            function openStartConfirmation() {
+                if (!config.enabledByAdmin) {
+                    showToast('Chế độ Chống Gian Lận hiện đang tắt. Bạn có thể làm bài trực tiếp.', 'info');
+                    return;
+                }
+                if (active) return;
+                syncStudentProfile();
+                const nameInp = document.getElementById('acGateNameInput');
+                const classInp = document.getElementById('acGateClassInput');
+                const titleEl = document.getElementById('acGateExamTitle');
+                if (nameInp) nameInp.value = appState.studentName || '';
+                if (classInp) classInp.value = appState.studentClass || '';
+                if (titleEl) titleEl.textContent = appState.examTitle || 'Bài thi đánh giá năng lực';
+                document.getElementById('acGateMaxViolations').textContent = `${config.maxViolations} lần`;
+                const gate = document.getElementById('ac-student-gate-modal');
+                gate.classList.remove('hidden');
+                gate.classList.add('flex');
+            }
+
+            function hideStudentGate() {
+                const gate = document.getElementById('ac-student-gate-modal');
+                if (gate) {
+                    gate.classList.add('hidden');
+                    gate.classList.remove('flex');
+                }
+            }
+
+            async function enterLockedExamFromGate() {
+                const nameInp = document.getElementById('acGateNameInput');
+                const classInp = document.getElementById('acGateClassInput');
+                const nameVal = (nameInp ? nameInp.value.trim() : '') || appState.studentName;
+                const classVal = (classInp ? classInp.value.trim() : '') || appState.studentClass;
+                if (!nameVal) {
+                    showToast('Vui lòng nhập họ tên thí sinh trước khi bắt đầu làm bài.', 'warning');
+                    if (nameInp) nameInp.focus();
+                    return;
+                }
+                document.getElementById('studentNameInput').value = nameVal;
+                document.getElementById('studentClassInput').value = classVal;
+                syncStudentProfile();
+                hideStudentGate();
+                await startProctoredAttempt();
+                showToast('Đã bắt đầu làm bài — Hệ thống Chống Gian Lận đã tự động kích hoạt!', 'success');
+            }
+
+            function onExamSessionLaunched() {
+                if (!config.enabledByAdmin) {
+                    syncPreExamUI();
+                    return;
+                }
+                if (active) {
+                    if (config.watermark) renderWatermark();
+                    if (config.perQuestion) resetPerQuestionTimer();
+                    if (config.antiExternalVeil) revealQuestionCard();
+                } else {
+                    // User just picked or generated an exam -> show Ready bar so they can review title/time & click "Bắt đầu làm bài"
+                    syncPreExamUI();
+                }
+            }
+
+            function autoActivateOnFirstAction() {
+                if (!config.enabledByAdmin || active) return;
+                openStartConfirmation();
+            }
+
+            function buildCurrentConfigSnapshot() {
+                return {
+                    enabledByAdmin: true,
+                    lockTab: document.getElementById('acOptLockTab').checked,
+                    mobileShot: document.getElementById('acOptMobileShot').checked,
+                    watermark: document.getElementById('acOptWatermark').checked,
+                    holdToView: document.getElementById('acOptHoldToView').checked,
+                    antiExternalVeil: document.getElementById('acOptHoldToView').checked,
+                    perQuestion: document.getElementById('acOptPerQuestion').checked,
+                    perQuestionSec: parseInt(document.getElementById('acOptPerQSeconds').value, 10) || 30,
+                    camera: document.getElementById('acOptCamera').checked,
+                    maxViolations: parseInt(document.getElementById('acOptMaxViolations').value, 10) || 3,
+                    shuffle: document.getElementById('acOptShuffle').value === 'yes',
+                    pinHash: getStoredPinHash()
+                };
+            }
+
+            function copyGlobalEnforceLink() {
+                if (!isAdminAuthenticated) return;
+                const snap = buildCurrentConfigSnapshot();
+                const encoded = btoa(encodeURIComponent(JSON.stringify(snap)));
+                const baseUrl = window.location.origin && window.location.origin !== 'null'
+                    ? `${window.location.origin}${window.location.pathname}`
+                    : window.location.href.split('?')[0];
+                const shareUrl = `${baseUrl}?ac_lock=1&cfg=${encoded}`;
+
+                const ta = document.createElement('textarea');
+                ta.value = shareUrl;
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    showToast('Đã copy Link Thi Bắt Buộc! Ai mở link này cũng tự động bật Chống Gian Lận.', 'success');
+                } catch (e) {
+                    prompt('Sao chép link thi bắt buộc dưới đây:', shareUrl);
+                }
+                document.body.removeChild(ta);
+            }
+
+            function exportLockedHtmlFile() {
+                if (!isAdminAuthenticated) return;
+                const snap = buildCurrentConfigSnapshot();
+                const currentDoc = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+                const markerRegex = /\/\*__AC_BAKED_POLICY_START__\*\/[\s\S]*?\/\*__AC_BAKED_POLICY_END__\*\//;
+                const replacement = `/*__AC_BAKED_POLICY_START__*/${JSON.stringify(snap)}/*__AC_BAKED_POLICY_END__*/`;
+                const patchedDoc = currentDoc.replace(markerRegex, replacement);
+
+                const blob = new Blob([patchedDoc], { type: 'text/html;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'edumetrics_thi_an_toan_bat_buoc.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Đã tải file HTML đã bật sẵn Chống Gian Lận! Gửi file này cho ai họ cũng bị tự động áp dụng.', 'success');
+            }
+
+            async function startProctoredAttempt() {
+                syncStudentProfile();
                 if (config.camera) {
                     const camOk = await startCameraProctoring();
                     if (!camOk) {
-                        showToast('Không thể mở Camera trước (do chưa cấp quyền hoặc không hỗ trợ). Tiếp tục với các lớp bảo vệ còn lại.', 'warning');
-                        config.camera = false;
+                        showToast('Không thể mở Camera trước. Tiếp tục với các lớp chống chụp & khóa tab.', 'warning');
                     }
                 }
-
-                // Reset exam for a clean proctored attempt
-                if (doShuffle && appState.questions.length > 1) {
+                if (config.shuffle && appState.questions.length > 1) {
                     appState.questions = shuffleArray(appState.questions);
                 }
                 appState.userAnswers = {};
@@ -3603,7 +4422,6 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 activateProtection();
                 updateTimerUI();
                 renderExamView();
-                showToast(`Đã kích hoạt Chế độ Thi An Toàn (Mã phiên #${sessionId})!`, 'success');
             }
 
             function activateProtection() {
@@ -3619,7 +4437,7 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
 
                 document.body.classList.add('ac-protected');
 
-                // Hide cheat-prone controls
+                // Hide cheat-prone controls during active exam
                 ['autoFillDemoBtn', 'toggleExplainBtn', 'resetExamBtn', 'pauseTimerBtn'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.classList.add('hidden');
@@ -3629,26 +4447,28 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                     if (el) el.disabled = true;
                 });
 
-                // Update top safe-mode button & status strip
-                const toggleBtn = document.getElementById('acToggleSafeModeBtn');
-                if (toggleBtn) {
-                    toggleBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white shadow-sm flex items-center gap-1.5 cursor-default';
-                    document.getElementById('acToggleSafeModeText').textContent = 'Đang Bảo Vệ';
-                }
+                syncPreExamUI();
                 document.getElementById('acStatusStrip').classList.remove('hidden');
                 document.getElementById('acSessionIdBadge').textContent = `Mã phiên: #${sessionId}`;
                 updateViolationBadge();
 
-                // Watermark + Anti-Photo Mesh
                 if (config.watermark) {
                     document.getElementById('ac-watermark').style.display = 'block';
                     document.getElementById('ac-anti-photo-mesh').style.display = 'block';
                     renderWatermark();
                     clearInterval(wmTimer);
-                    wmTimer = setInterval(renderWatermark, 3000);
+                    wmTimer = setInterval(renderWatermark, 2000);
                 }
 
-                // Per-question countdown
+                const qCard = document.getElementById('examQuestionCard');
+                if (config.holdToView && qCard) {
+                    qCard.classList.add('ac-hold-active', 'ac-hold-locked');
+                    qCard.classList.remove('ac-question-veiled');
+                } else {
+                    if (qCard) qCard.classList.remove('ac-hold-active', 'ac-hold-locked');
+                    revealQuestionCard();
+                }
+
                 if (config.perQuestion) {
                     document.getElementById('acPerQCountdownBadge').classList.remove('hidden');
                     resetPerQuestionTimer();
@@ -3656,7 +4476,6 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                     document.getElementById('acPerQCountdownBadge').classList.add('hidden');
                 }
 
-                // Request fullscreen
                 if (config.lockTab) {
                     requestFullscreen();
                 }
@@ -3666,12 +4485,133 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 const grid = document.getElementById('ac-watermark-grid');
                 if (!grid) return;
                 const now = new Date().toLocaleTimeString('vi-VN');
-                const label = `${escapeHtml(appState.studentName.toUpperCase())} • ${escapeHtml(appState.studentClass)} • #${sessionId} • ${now}`;
-                grid.innerHTML = Array(48).fill(`<div>${label}</div>`).join('');
-                const dx = Math.floor(Math.random() * 44 - 22);
-                const dy = Math.floor(Math.random() * 44 - 22);
-                const rot = -28 + Math.floor(Math.random() * 5 - 2);
+                const label = `${escapeHtml(appState.studentName.toUpperCase())} • ${escapeHtml(appState.studentClass)} • #${sessionId} • ${deviceTag} • ${now}`;
+                grid.innerHTML = Array(75).fill(`<div>${label}</div>`).join('');
+                const dx = Math.floor(Math.random() * 56 - 28);
+                const dy = Math.floor(Math.random() * 56 - 28);
+                const rot = -28 + Math.floor(Math.random() * 7 - 3);
                 grid.style.transform = `rotate(${rot}deg) translate(${dx}px, ${dy}px)`;
+
+                // Direct watermark cutting straight across the question text
+                const qWm = document.getElementById('ac-qtext-watermark');
+                if (qWm) {
+                    qWm.style.display = 'flex';
+                    qWm.innerHTML = `<span>${label}</span><span>${label}</span>`;
+                }
+            }
+
+            let activeHoldKeyId = null;
+            let isPointerHolding = false;
+
+            function isRevealKeyAllowed(e) {
+                const k = (e.key || '').toLowerCase();
+                const code = e.code || '';
+                // Disallow OS / screenshot / escape / function / volume keys from revealing
+                if (
+                    e.metaKey ||
+                    k === 'meta' || k === 'os' ||
+                    k === 'escape' || k === 'printscreen' ||
+                    /^f([1-9]|1[0-2])$/i.test(e.key || '') ||
+                    ['volumedown', 'volumeup', 'audiovolumedown', 'audiovolumeup', 'contextmenu'].includes(k) ||
+                    code === 'MetaLeft' || code === 'MetaRight'
+                ) {
+                    return false;
+                }
+                return true;
+            }
+
+            function formatKeyLabel(e) {
+                if (!e) return '';
+                if (e.code === 'Space' || e.key === ' ') return 'SPACE';
+                if (e.key === 'Control') return 'CTRL';
+                if (e.key === 'Shift') return 'SHIFT';
+                if (e.key === 'Alt') return 'ALT';
+                return String(e.key || e.code || '').toUpperCase().slice(0, 10);
+            }
+
+            function holdRevealStart(e, keyLabel = '') {
+                // Do NOT call preventDefault() on touchstart so mobile users can still scroll/swipe smoothly while holding!
+                if (e && e.type === 'mousedown' && e.cancelable && !keyLabel) {
+                    e.preventDefault();
+                }
+                if (!active || !config.holdToView) return;
+                if (!keyLabel) {
+                    if (activeHoldKeyId !== null) return;
+                    isPointerHolding = true;
+                }
+                const qCard = document.getElementById('examQuestionCard');
+                if (qCard) qCard.classList.remove('ac-hold-locked');
+                const btn = document.getElementById('acHoldToViewBtn');
+                if (btn) {
+                    btn.classList.remove('bg-rose-600');
+                    btn.classList.add('bg-emerald-600');
+                }
+                const btnTxt = document.getElementById('acHoldBtnText');
+                if (btnTxt) {
+                    btnTxt.textContent = keyLabel
+                        ? `ĐANG HIỆN ĐỀ (PHÍM: ${keyLabel})`
+                        : 'ĐANG HIỆN ĐỀ (GIỮ TAY / LƯỚT ĐỌC)';
+                }
+            }
+
+            function holdRevealEnd(force = false) {
+                if (force) {
+                    activeHoldKeyId = null;
+                    isPointerHolding = false;
+                } else {
+                    isPointerHolding = false;
+                }
+                if (!active || !config.holdToView) return;
+                if (!force && activeHoldKeyId !== null) return;
+                const qCard = document.getElementById('examQuestionCard');
+                if (qCard) qCard.classList.add('ac-hold-locked');
+                const btn = document.getElementById('acHoldToViewBtn');
+                if (btn) {
+                    btn.classList.remove('bg-emerald-600');
+                    btn.classList.add('bg-rose-600');
+                }
+                const btnTxt = document.getElementById('acHoldBtnText');
+                if (btnTxt) btnTxt.textContent = 'GIỮ TAY / CHUỘT / 1 PHÍM ĐỂ ĐỌC ĐỀ';
+            }
+
+            // === INSTANT 0MS BLACKOUT CURTAIN (MOBILE & PC SCREENSHOT DEFENSE) ===
+            function flashBlackout(reason, durationMs = 1800) {
+                const curtain = document.getElementById('ac-blackout-curtain');
+                const reasonEl = document.getElementById('ac-blackout-reason');
+                if (!curtain) return;
+                if (reasonEl && reason) reasonEl.textContent = reason;
+                curtain.classList.add('active');
+                document.body.classList.add('ac-blurred');
+                clearTimeout(blackoutTimer);
+                blackoutTimer = setTimeout(() => {
+                    curtain.classList.remove('active');
+                }, durationMs);
+            }
+
+            // === ACTIVE ANTI-EXTERNAL-PHOTO VEIL ===
+            function veilQuestionCard() {
+                if (!active || !config.antiExternalVeil) return;
+                const card = document.getElementById('examQuestionCard');
+                if (card) card.classList.add('ac-question-veiled');
+            }
+
+            function revealQuestionCard() {
+                const card = document.getElementById('examQuestionCard');
+                if (card) card.classList.remove('ac-question-veiled');
+                if (active && config.holdToView && card) {
+                    card.classList.add('ac-hold-active');
+                    if (activeHoldKeyId === null && !isPointerHolding) {
+                        card.classList.add('ac-hold-locked');
+                    }
+                }
+            }
+
+            function resetInactivityVeilTimer() {
+                clearTimeout(inactivityTimer);
+                if (!active || !config.antiExternalVeil || config.holdToView) return;
+                inactivityTimer = setTimeout(() => {
+                    veilQuestionCard();
+                }, 6000); // 6s without touching screen or moving mouse -> auto-veil against aiming an external phone
             }
 
             function resetPerQuestionTimer() {
@@ -3696,6 +4636,7 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                             renderExamView();
                             showToast('Hết thời gian câu hiện tại! Tự động chuyển sang câu tiếp theo.', 'warning');
                             resetPerQuestionTimer();
+                            revealQuestionCard();
                         } else {
                             showToast('Hết thời gian câu cuối! Hệ thống tự động nộp bài.', 'warning');
                             computeReportFromExamAttempt(true);
@@ -3714,6 +4655,8 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                     const video = document.getElementById('ac-camera-video');
                     video.srcObject = cameraStream;
                     document.getElementById('ac-camera-pip').style.display = 'block';
+                    bindCameraDrag();
+                    setCameraPrivacyMode('blur');
                     darkFramesCount = 0;
 
                     clearInterval(cameraCheckTimer);
@@ -3746,6 +4689,135 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 }
             }
 
+            let camPrivacyMode = 'blur';
+            let camBlurPx = 18;
+            let camDragBound = false;
+
+            function bindCameraDrag() {
+                if (camDragBound) return;
+                const pip = document.getElementById('ac-camera-pip');
+                if (!pip) return;
+                camDragBound = true;
+
+                let dragging = false;
+                let offsetX = 0, offsetY = 0;
+
+                const onStart = (clientX, clientY) => {
+                    const rect = pip.getBoundingClientRect();
+                    dragging = true;
+                    offsetX = clientX - rect.left;
+                    offsetY = clientY - rect.top;
+                    pip.style.right = 'auto';
+                    pip.style.bottom = 'auto';
+                    pip.style.left = rect.left + 'px';
+                    pip.style.top = rect.top + 'px';
+                };
+
+                const onMove = (clientX, clientY) => {
+                    if (!dragging) return;
+                    const maxX = Math.max(8, window.innerWidth - pip.offsetWidth - 8);
+                    const maxY = Math.max(8, window.innerHeight - pip.offsetHeight - 8);
+                    const nx = Math.min(maxX, Math.max(8, clientX - offsetX));
+                    const ny = Math.min(maxY, Math.max(8, clientY - offsetY));
+                    pip.style.left = nx + 'px';
+                    pip.style.top = ny + 'px';
+                };
+
+                const onEnd = () => { dragging = false; };
+
+                pip.addEventListener('mousedown', e => {
+                    if (e.target.closest('#ac-camera-panel') || e.target.closest('#ac-camera-controls-btn')) return;
+                    onStart(e.clientX, e.clientY);
+                });
+                window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+                window.addEventListener('mouseup', onEnd);
+
+                pip.addEventListener('touchstart', e => {
+                    if (e.target.closest('#ac-camera-panel') || e.target.closest('#ac-camera-controls-btn')) return;
+                    if (e.touches && e.touches.length === 1) {
+                        onStart(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, { passive: true });
+                window.addEventListener('touchmove', e => {
+                    if (dragging && e.touches && e.touches.length === 1) {
+                        onMove(e.touches[0].clientX, e.touches[0].clientY);
+                    }
+                }, { passive: true });
+                window.addEventListener('touchend', onEnd);
+            }
+
+            function toggleCameraPanel(e) {
+                if (e) e.stopPropagation();
+                const panel = document.getElementById('ac-camera-panel');
+                if (panel) panel.classList.toggle('hidden');
+            }
+
+            function setCameraPrivacyMode(mode) {
+                camPrivacyMode = mode;
+                const pip = document.getElementById('ac-camera-pip');
+                const video = document.getElementById('ac-camera-video');
+                const mask = document.getElementById('ac-camera-face-mask');
+                const badgeTxt = document.getElementById('ac-camera-badge-txt');
+                if (!pip || !video || !mask) return;
+
+                // Update mode buttons
+                const mapBtn = { blur: 'acCamModeBlur', hidden: 'acCamModeHidden', clear: 'acCamModeClear' };
+                Object.keys(mapBtn).forEach(k => {
+                    const b = document.getElementById(mapBtn[k]);
+                    if (!b) return;
+                    b.className = (k === mode)
+                        ? 'py-1 px-1.5 rounded-lg text-[10px] font-bold bg-rose-600 text-white'
+                        : 'py-1 px-1.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700';
+                });
+
+                if (mode === 'hidden') {
+                    pip.classList.add('cam-minimized');
+                    if (badgeTxt) badgeTxt.textContent = 'GIÁM SÁT NGẦM';
+                } else {
+                    pip.classList.remove('cam-minimized');
+                    if (mode === 'blur') {
+                        const blurVal = Math.max(10, camBlurPx);
+                        video.style.filter = `blur(${blurVal}px) brightness(0.75)`;
+                        mask.style.display = 'flex';
+                        if (badgeTxt) badgeTxt.textContent = 'ẨN MẶT';
+                    } else {
+                        video.style.filter = 'none';
+                        mask.style.display = 'none';
+                        if (badgeTxt) badgeTxt.textContent = 'GIÁM SÁT';
+                    }
+                }
+            }
+
+            function setCameraBlur(val) {
+                camBlurPx = parseInt(val, 10) || 0;
+                const lbl = document.getElementById('acCamBlurVal');
+                if (lbl) lbl.textContent = `${camBlurPx}px`;
+                const video = document.getElementById('ac-camera-video');
+                const mask = document.getElementById('ac-camera-face-mask');
+                if (video) {
+                    video.style.filter = camBlurPx > 0 ? `blur(${camBlurPx}px) brightness(0.75)` : 'none';
+                }
+                if (mask) {
+                    mask.style.display = camBlurPx >= 8 ? 'flex' : 'none';
+                }
+                if (camPrivacyMode === 'hidden') setCameraPrivacyMode('blur');
+            }
+
+            function setCameraOpacity(val) {
+                const pct = parseInt(val, 10) || 100;
+                const lbl = document.getElementById('acCamOpacityVal');
+                if (lbl) lbl.textContent = `${pct}%`;
+                const pip = document.getElementById('ac-camera-pip');
+                if (pip) pip.style.opacity = String(pct / 100);
+            }
+
+            function setCameraSize(sz) {
+                const pip = document.getElementById('ac-camera-pip');
+                if (!pip) return;
+                pip.classList.remove('cam-size-sm', 'cam-size-md', 'cam-size-lg', 'cam-minimized');
+                pip.classList.add(`cam-size-${sz}`);
+            }
+
             function stopCameraProctoring() {
                 clearInterval(cameraCheckTimer);
                 if (cameraStream) {
@@ -3754,6 +4826,8 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 }
                 const pip = document.getElementById('ac-camera-pip');
                 if (pip) pip.style.display = 'none';
+                const panel = document.getElementById('ac-camera-panel');
+                if (panel) panel.classList.add('hidden');
             }
 
             function requestFullscreen() {
@@ -3765,7 +4839,7 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
             function updateViolationBadge() {
                 const badge = document.getElementById('acViolationCounterBadge');
                 if (!badge) return;
-                badge.textContent = `Vi phạm: ${violations}/${maxViolations}`;
+                badge.textContent = `Vi phạm: ${violations}/${config.maxViolations}`;
                 if (violations === 0) {
                     badge.className = 'px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold';
                 } else {
@@ -3773,8 +4847,17 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 }
             }
 
-            function triggerViolation(reason) {
+            function triggerViolation(reason, instantBlackout = true) {
                 if (!active) return;
+                // Ignore violations while Admin has setup/login modal open
+                const setupOpen = !document.getElementById('ac-setup-modal').classList.contains('hidden');
+                const loginOpen = !document.getElementById('ac-admin-login-modal').classList.contains('hidden');
+                if (setupOpen || loginOpen) return;
+
+                if (instantBlackout) {
+                    flashBlackout(reason, 1200);
+                }
+
                 const nowMs = Date.now();
                 if (nowMs - lastViolationAt < 1800) return;
                 lastViolationAt = nowMs;
@@ -3791,9 +4874,9 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 const msgEl = document.getElementById('ac-warning-msg');
                 const resumeBtn = document.getElementById('ac-resume-btn');
 
-                if (violations >= maxViolations) {
+                if (violations >= config.maxViolations) {
                     forcedSubmit = true;
-                    msgEl.innerHTML = `Phát hiện: <strong>${escapeHtml(reason)}</strong>.<br>Bạn đã chạm ngưỡng <strong>${violations}/${maxViolations} lần vi phạm</strong>.<br>Hệ thống sẽ tự động khóa đề và nộp bài ngay lập tức!`;
+                    msgEl.innerHTML = `Phát hiện: <strong>${escapeHtml(reason)}</strong>.<br>Bạn đã chạm ngưỡng <strong>${violations}/${config.maxViolations} lần vi phạm</strong>.<br>Hệ thống sẽ tự động khóa đề và nộp bài ngay lập tức!`;
                     resumeBtn.classList.add('hidden');
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
@@ -3804,7 +4887,7 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                         computeReportFromExamAttempt(true);
                     }, 2000);
                 } else {
-                    msgEl.innerHTML = `Phát hiện: <strong>${escapeHtml(reason)}</strong>.<br>Số lần vi phạm hiện tại: <strong class="text-rose-600">${violations}/${maxViolations}</strong>.<br>Nếu tiếp tục vi phạm, hệ thống sẽ tự động thu bài.`;
+                    msgEl.innerHTML = `Phát hiện: <strong>${escapeHtml(reason)}</strong>.<br>Số lần vi phạm hiện tại: <strong class="text-rose-600">${violations}/${config.maxViolations}</strong>.<br>Nếu tiếp tục vi phạm, hệ thống sẽ tự động thu bài.`;
                     resumeBtn.classList.remove('hidden');
                     modal.classList.remove('hidden');
                     modal.classList.add('flex');
@@ -3815,7 +4898,9 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 const modal = document.getElementById('ac-warning-modal');
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
+                document.getElementById('ac-blackout-curtain').classList.remove('active');
                 document.body.classList.remove('ac-blurred');
+                revealQuestionCard();
                 if (config.lockTab) requestFullscreen();
             }
 
@@ -3823,12 +4908,22 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 active = false;
                 clearInterval(wmTimer);
                 clearInterval(perQTimer);
+                clearTimeout(blackoutTimer);
+                clearTimeout(inactivityTimer);
                 stopCameraProctoring();
 
+                activeHoldKeyId = null;
+                isPointerHolding = false;
                 document.body.classList.remove('ac-protected', 'ac-blurred');
+                document.getElementById('ac-blackout-curtain').classList.remove('active');
                 document.getElementById('ac-watermark').style.display = 'none';
                 document.getElementById('ac-anti-photo-mesh').style.display = 'none';
                 document.getElementById('acStatusStrip').classList.add('hidden');
+                syncPreExamUI();
+                const card = document.getElementById('examQuestionCard');
+                if (card) card.classList.remove('ac-question-veiled', 'ac-hold-active', 'ac-hold-locked');
+                const qWm = document.getElementById('ac-qtext-watermark');
+                if (qWm) qWm.style.display = 'none';
 
                 ['autoFillDemoBtn', 'toggleExplainBtn', 'resetExamBtn', 'pauseTimerBtn'].forEach(id => {
                     const el = document.getElementById(id);
@@ -3839,11 +4934,7 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                     if (el) el.disabled = false;
                 });
 
-                const toggleBtn = document.getElementById('acToggleSafeModeBtn');
-                if (toggleBtn) {
-                    toggleBtn.className = 'px-3 py-2 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition flex items-center gap-1.5';
-                    document.getElementById('acToggleSafeModeText').textContent = 'Bật Chống Gian Lận';
-                }
+                updateAdminButtonUI();
 
                 if (document.fullscreenElement) {
                     document.exitFullscreen().catch(() => {});
@@ -3855,10 +4946,12 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                     enabled: wasEnabledInSession,
                     sessionId: sessionId || 'NONE',
                     violations,
-                    maxViolations,
+                    maxViolations: config.maxViolations,
                     forcedSubmit,
                     cameraUsed: config.camera,
                     perQuestionMode: config.perQuestion,
+                    mobileShotShield: config.mobileShot,
+                    antiExternalVeil: config.antiExternalVeil,
                     logs: [...violationLogs]
                 };
                 stopProtection();
@@ -3882,7 +4975,7 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 const logBox = document.getElementById('acReportLogContainer');
 
                 sessionPill.textContent = `Mã phiên: #${acData.sessionId}`;
-                subtitle.textContent = `Chế độ Thi An Toàn • Watermark chống chụp${acData.perQuestionMode ? ' • Đếm ngược từng câu' : ''}${acData.cameraUsed ? ' • Giám sát Camera' : ''}`;
+                subtitle.textContent = `Chế độ Thi An Toàn (Admin) • Watermark + Moiré${acData.mobileShotShield ? ' • Chống chụp ĐT/PC' : ''}${acData.antiExternalVeil ? ' • Màn che chống chụp ngoài' : ''}${acData.perQuestionMode ? ' • Đếm ngược từng câu' : ''}`;
 
                 if (acData.forcedSubmit) {
                     iconBox.className = 'w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg shrink-0';
@@ -3913,27 +5006,102 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                 }
             }
 
-            // === GLOBAL SECURITY LISTENERS ===
-            document.addEventListener('visibilitychange', () => {
-                if (active && config.lockTab && document.hidden) {
-                    triggerViolation('Rời khỏi màn hình làm bài / Chuyển ứng dụng khác');
+            // === GLOBAL SECURITY LISTENERS (MOBILE + PC) ===
+            // 1. Mobile 3-finger screenshot detection + Touch-Hold-to-View while still allowing vertical scroll
+            document.addEventListener('touchstart', e => {
+                if (!active) return;
+                if (config.mobileShot && e.touches && e.touches.length >= 3) {
+                    e.preventDefault();
+                    holdRevealEnd(true);
+                    flashBlackout('Phát hiện thao tác 3 ngón chụp màn hình trên điện thoại!', 2200);
+                    triggerViolation('Phát hiện cử chỉ 3 ngón tay (nghi vấn chụp ảnh màn hình điện thoại)', true);
+                    return;
+                }
+                // On mobile: holding 1 or 2 fingers on the exam area (or Hold button) reveals the question while allowing scrolling
+                if (config.holdToView && e.touches && e.touches.length >= 1) {
+                    const inHoldZone = e.target && (e.target.closest('#examQuestionCard') || e.target.closest('#acHoldToViewBtn'));
+                    if (inHoldZone) {
+                        holdRevealStart(null, '');
+                    }
+                }
+                if (config.antiExternalVeil) resetInactivityVeilTimer();
+            }, { passive: false });
+
+            // Keep question revealed while finger is sliding/scrolling on screen
+            document.addEventListener('touchmove', e => {
+                if (!active) return;
+                if (config.holdToView && e.touches && e.touches.length >= 1 && isPointerHolding) {
+                    const qCard = document.getElementById('examQuestionCard');
+                    if (qCard && qCard.classList.contains('ac-hold-locked')) {
+                        holdRevealStart(null, '');
+                    }
+                }
+            }, { passive: true });
+
+            // Immediately hide question in 0ms as soon as user lifts their finger(s) off the screen!
+            document.addEventListener('touchend', e => {
+                if (!active || !config.holdToView) return;
+                if (!e.touches || e.touches.length === 0) {
+                    holdRevealEnd(false);
+                }
+            }, { passive: true });
+
+            // 2. Mobile system gesture interruption (Android/iOS screenshot swipe, power+vol overlay, notification pull-down)
+            document.addEventListener('touchcancel', () => {
+                if (!active) return;
+                if (config.holdToView) {
+                    holdRevealEnd(true);
+                }
+                // Note: Browsers fire touchcancel when native scroll takes over; real screenshot/notification gestures also trigger blur/visibilitychange
+            });
+
+            // 3. Keep question clear while actively interacting (touch/mouse/key)
+            ['touchmove', 'mousemove', 'click', 'keydown'].forEach(ev => {
+                document.addEventListener(ev, () => {
+                    if (active && config.antiExternalVeil) {
+                        resetInactivityVeilTimer();
+                    }
+                }, { passive: true });
+            });
+
+            // 4. PC: Cursor leaving browser viewport (e.g., moving to Snipping Tool or second monitor)
+            document.addEventListener('mouseleave', () => {
+                if (active && config.holdToView) {
+                    holdRevealEnd(true);
+                } else if (active && config.antiExternalVeil) {
+                    veilQuestionCard();
                 }
             });
 
-            window.addEventListener('blur', () => {
+            // 5. Tab switch / App switch / Page hide
+            document.addEventListener('visibilitychange', () => {
+                if (active && config.lockTab && document.hidden) {
+                    triggerViolation('Rời khỏi màn hình làm bài / Chuyển ứng dụng khác', true);
+                }
+            });
+            window.addEventListener('pagehide', () => {
                 if (active && config.lockTab) {
-                    document.body.classList.add('ac-blurred');
-                    triggerViolation('Mất tiêu điểm cửa sổ (Kéo thanh thông báo / Mở cửa sổ nổi)');
+                    flashBlackout('Rời khỏi trình duyệt!', 2000);
+                }
+            });
+
+            // 6. Focus loss (Notification shade, floating window, screenshot toolbar, Alt+Tab)
+            window.addEventListener('blur', () => {
+                if (active && config.holdToView) {
+                    holdRevealEnd(true);
+                }
+                if (active && (config.lockTab || config.mobileShot)) {
+                    triggerViolation('Mất tiêu điểm cửa sổ (Kéo thanh thông báo / Chụp màn hình / Mở cửa sổ nổi)', true);
                 }
             });
 
             document.addEventListener('fullscreenchange', () => {
                 if (active && config.lockTab && !document.fullscreenElement) {
-                    triggerViolation('Thoát khỏi chế độ toàn màn hình');
+                    triggerViolation('Thoát khỏi chế độ toàn màn hình', true);
                 }
             });
 
-            // Detect sudden split-screen / pop-up view resize on Android/Desktop
+            // 7. Split-screen / Floating window resize detection
             let resizeDebounce = null;
             window.addEventListener('resize', () => {
                 if (!active || !config.lockTab) return;
@@ -3942,43 +5110,107 @@ Giải thích: Tư duy bậc cao đòi hỏi khả năng tổng hợp và đánh
                     const widthDrop = baselineWidth - window.innerWidth;
                     const heightDrop = baselineHeight - window.innerHeight;
                     if (widthDrop > 160 || heightDrop > 220) {
-                        triggerViolation('Thay đổi kích thước màn hình bất thường (Chia đôi màn hình / Cửa sổ thu nhỏ)');
+                        triggerViolation('Thay đổi kích thước màn hình bất thường (Chia đôi màn hình / Cửa sổ thu nhỏ)', true);
                     }
-                }, 400);
+                }, 350);
             });
 
+            // 8. Block copy/paste/right-click/selection
             ['contextmenu', 'copy', 'cut', 'paste', 'selectstart', 'dragstart'].forEach(evt => {
                 document.addEventListener(evt, e => {
                     if (active) e.preventDefault();
                 });
             });
 
+            // 9. Hardware Volume keys (Android) + PC Screenshot & DevTools shortcuts + Any-Key Hold-to-View
             document.addEventListener('keydown', e => {
                 if (!active) return;
-                const k = e.key.toLowerCase();
-                const isScreenshotKey = e.key === 'PrintScreen' || (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(k)) || (e.ctrlKey && e.shiftKey && k === 's');
+                const k = (e.key || '').toLowerCase();
+                const isMobileVolume = ['volumedown', 'volumeup', 'audiovolumedown', 'audiovolumeup'].includes(k);
+                const isScreenshotKey = e.key === 'PrintScreen' || (e.metaKey && e.shiftKey && ['3', '4', '5', 's'].includes(k)) || (e.ctrlKey && e.shiftKey && k === 's');
                 const isDevOrPrint = e.key === 'F12' || (e.ctrlKey && ['c', 'v', 'x', 'u', 'p', 's', 'a'].includes(k)) || (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(k));
-                if (isScreenshotKey) {
+
+                if (config.mobileShot && (isMobileVolume || isScreenshotKey)) {
                     e.preventDefault();
-                    document.body.classList.add('ac-blurred');
-                    triggerViolation('Phát hiện thao tác chụp ảnh màn hình');
-                } else if (isDevOrPrint) {
+                    holdRevealEnd(true);
+                    triggerViolation(isMobileVolume ? 'Phát hiện nhấn phím cứng âm lượng (nghi vấn chụp màn hình điện thoại)' : 'Phát hiện phím chụp ảnh màn hình', true);
+                    return;
+                }
+                if (isDevOrPrint) {
+                    e.preventDefault();
+                    holdRevealEnd(true);
+                    return;
+                }
+                if (e.metaKey || k === 'meta' || k === 'os' || k === 'escape') {
+                    holdRevealEnd(true);
+                    return;
+                }
+
+                // Strict 2-control rule: Only allow Mouse OR 1 single keyboard key (block all other keys)
+                const isTypingField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+                if (config.holdToView && !isTypingField && isRevealKeyAllowed(e)) {
+                    e.preventDefault();
+                    // If mouse/touch is already holding, ignore keyboard keys
+                    if (isPointerHolding) return;
+                    const keyId = e.code || e.key;
+                    // Only accept the first held key; ignore any extra keys pressed at the same time
+                    if (activeHoldKeyId === null || activeHoldKeyId === keyId) {
+                        activeHoldKeyId = keyId;
+                        holdRevealStart(null, formatKeyLabel(e));
+                    }
+                } else if (!isTypingField) {
                     e.preventDefault();
                 }
             });
 
+            document.addEventListener('keyup', e => {
+                if (!active || !config.holdToView) return;
+                const keyId = e.code || e.key;
+                if (activeHoldKeyId === keyId) {
+                    activeHoldKeyId = null;
+                    if (!isPointerHolding) {
+                        holdRevealEnd(false);
+                    }
+                }
+            });
+
             window.addEventListener('beforeprint', () => {
-                if (active) triggerViolation('Cố gắng in hoặc xuất PDF đề thi');
+                if (active) triggerViolation('Cố gắng in hoặc xuất PDF đề thi', true);
             });
 
             return {
+                init,
+                openAdminEntry,
+                closeAdminLoginModal,
+                verifyAdminPin,
+                logoutAdmin,
+                changeAdminPin,
                 openSetupModal,
                 closeSetupModal,
-                confirmStartFromModal,
+                onMasterTogglePreview,
+                saveAdminSettings,
+                checkMandatoryGate,
+                openStartConfirmation,
+                hideStudentGate,
+                enterLockedExamFromGate,
+                isWaitingToStart: () => !!config.enabledByAdmin && !active,
                 resumeAfterWarning,
+                revealQuestionCard,
+                holdRevealStart,
+                holdRevealEnd,
+                toggleCameraPanel,
+                setCameraPrivacyMode,
+                setCameraBlur,
+                setCameraOpacity,
+                setCameraSize,
                 resetPerQuestionTimer,
                 finishAndGetReport,
                 renderIntegrityReport,
+                onExamSessionLaunched,
+                autoActivateOnFirstAction,
+                copyGlobalEnforceLink,
+                exportLockedHtmlFile,
+                isEnforcedByAdmin: () => !!config.enabledByAdmin,
                 isActive: () => active,
                 isBackwardLocked: () => active && config.perQuestion
             };
